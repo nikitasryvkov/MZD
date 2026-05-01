@@ -1,0 +1,73 @@
+.shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.2rem;
+}
+
+.card {
+  width: min(100%, 32rem);
+  padding: 1.6rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(18, 42, 66, 0.12);
+  background:
+    linear-gradient(180deg, rgba(251, 252, 255, 0.96), rgba(240, 245, 249, 0.96)),
+    white;
+  box-shadow: var(--shadow-elevated);
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(18, 42, 66, 0.58);
+}
+
+.card h1 {
+  margin: 0;
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  letter-spacing: -0.05em;
+  color: #102739;
+}
+
+.card p {
+  margin: 0;
+  color: rgba(16, 39, 57, 0.8);
+}
+
+.error {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  background: rgba(197, 82, 66, 0.1);
+  border: 1px solid rgba(197, 82, 66, 0.22);
+  color: #6b251d;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton {
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  padding: 0.8rem 1.1rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #0e4059, #1a7d9d);
+  color: white;
+}
+
+.secondaryButton {
+  background: rgba(16, 39, 57, 0.08);
+  color: #102739;
+}

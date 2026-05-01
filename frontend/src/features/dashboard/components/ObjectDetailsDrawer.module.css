@@ -1,0 +1,257 @@
+.shell {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  pointer-events: none;
+}
+
+.shell[data-open='true'] {
+  pointer-events: auto;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 20, 32, 0.2);
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.drawer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: min(100%, 31rem);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  transform: translateX(100%);
+  transition: transform 180ms ease-out;
+  background: rgba(250, 252, 255, 0.98);
+  border-left: 1px solid rgba(18, 42, 66, 0.12);
+  box-shadow: var(--shadow-elevated);
+}
+
+.shell[data-open='true'] .drawer {
+  transform: translateX(0);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+  padding: 1.2rem 1.25rem 1rem;
+  border-bottom: 1px solid rgba(18, 42, 66, 0.08);
+}
+
+.headerContent {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.iconWrap {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: rgba(26, 125, 157, 0.12);
+  color: var(--accent-strong);
+}
+
+.eyebrow {
+  font-size: 0.74rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.header h2 {
+  margin-top: 0.2rem;
+  font-size: 1.35rem;
+}
+
+.subtitle {
+  margin-top: 0.3rem;
+  color: var(--ink-muted);
+}
+
+.close {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  box-shadow: none;
+}
+
+.summaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(18, 42, 66, 0.08);
+}
+
+.summaryRow div {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(18, 42, 66, 0.1);
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.content {
+  overflow: auto;
+  padding: 1.1rem 1.25rem 1.5rem;
+}
+
+.sectionStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.section {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.74);
+  border: 1px solid rgba(18, 42, 66, 0.08);
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+}
+
+.sectionHeader h3 {
+  font-size: 1rem;
+}
+
+.sectionHeader small {
+  color: var(--ink-soft);
+}
+
+.badgeRow {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.description {
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+.infoGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.infoCard {
+  padding: 0.85rem;
+  border-radius: 0.95rem;
+  background: rgba(244, 247, 252, 0.9);
+}
+
+.infoCard dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+}
+
+.infoCard dd {
+  margin: 0.35rem 0 0;
+  color: var(--ink-strong);
+}
+
+.historyList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.historyRow {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.85rem;
+  border-radius: 0.95rem;
+  background: rgba(244, 247, 252, 0.92);
+}
+
+.historyRow strong {
+  display: block;
+}
+
+.historyRow small,
+.historyRow p {
+  color: var(--ink-muted);
+}
+
+.historyBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.arrow {
+  color: var(--ink-soft);
+}
+
+.form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.field span {
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+}
+
+.field small {
+  color: var(--accent-danger);
+}
+
+.inlineAlert {
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  background: rgba(197, 82, 66, 0.1);
+  color: #a4372d;
+}
+
+.loadingState {
+  display: grid;
+  gap: 1rem;
+}
+
+.headerSkeleton {
+  min-height: 8rem;
+}
+
+.sectionSkeleton {
+  min-height: 14rem;
+}
+
+@media (max-width: 720px) {
+  .drawer {
+    width: 100%;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}

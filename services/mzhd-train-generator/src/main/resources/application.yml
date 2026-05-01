@@ -1,0 +1,33 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: mzhd-train-generator
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:dashboard}
+    password: ${RABBITMQ_PASSWORD:dashboard}
+    template:
+      reply-timeout: ${GENERATOR_MESSAGING_REPLY_TIMEOUT:10s}
+
+management:
+  endpoints:
+      web:
+        exposure:
+          include: health,info,prometheus
+
+generator:
+  client:
+    exchange: ${GENERATOR_MESSAGING_EXCHANGE:mzhd.generator.exchange}
+    routing-keys:
+      reference-network-request: ${GENERATOR_MESSAGING_REFERENCE_NETWORK_KEY:generator.reference-network.request}
+      active-events-request: ${GENERATOR_MESSAGING_ACTIVE_EVENTS_KEY:generator.active-events.request}
+      trains-sync: ${GENERATOR_MESSAGING_TRAINS_SYNC_KEY:generator.trains.sync}
+      events-sync: ${GENERATOR_MESSAGING_EVENTS_SYNC_KEY:generator.events.sync}
+      personnel-snapshot-sync: ${GENERATOR_MESSAGING_PERSONNEL_SYNC_KEY:generator.personnel.snapshot.sync}
+  train:
+    source-system: ${TRAIN_GENERATOR_SOURCE_SYSTEM:mzhd-train-generator}
+    time-zone: ${TRAIN_GENERATOR_TIME_ZONE:Europe/Moscow}
+    tick-interval: ${TRAIN_GENERATOR_TICK_INTERVAL:15s}

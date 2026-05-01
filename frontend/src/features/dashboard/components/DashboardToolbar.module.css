@@ -1,0 +1,141 @@
+.toolbar {
+  animation: panel-enter 260ms ease-out;
+}
+
+.toolbar header {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.headerActions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+}
+
+.grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+}
+
+.group {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.95rem;
+  border-radius: 1.05rem;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(18, 42, 66, 0.08);
+}
+
+.periodGroup {
+  grid-column: 1 / -1;
+}
+
+.groupHeader {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--ink-strong);
+}
+
+.groupHeader h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.pillGrid,
+.toggleRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.4rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(18, 42, 66, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: none;
+}
+
+.pill[data-active='true'] {
+  background: rgba(26, 125, 157, 0.12);
+  border-color: rgba(26, 125, 157, 0.28);
+  color: var(--accent-strong);
+}
+
+.fieldGrid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.field span {
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+}
+
+.field small,
+.analyticsError {
+  font-size: 0.75rem;
+  color: var(--accent-danger);
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #0e4059, #1a7d9d);
+  color: white;
+  border-color: rgba(14, 64, 89, 0.24);
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .headerActions button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

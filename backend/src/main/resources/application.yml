@@ -1,0 +1,109 @@
+spring:
+  application:
+    name: geoanalytics-dashboard-backend
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/mzd_dashboard}
+    username: ${DATABASE_USERNAME:dashboard}
+    password: ${DATABASE_PASSWORD:dashboard}
+    hikari:
+      pool-name: dashboard-hikari
+      maximum-pool-size: ${DATABASE_POOL_SIZE:10}
+      minimum-idle: ${DATABASE_POOL_MIN_IDLE:2}
+  flyway:
+    enabled: true
+    schemas:
+      - dashboard
+    default-schema: dashboard
+    locations:
+      - classpath:db/migration
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:dashboard}
+    password: ${RABBITMQ_PASSWORD:dashboard}
+    listener:
+      simple:
+        default-requeue-rejected: false
+server:
+  error:
+    whitelabel:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  security:
+    enabled: ${APP_SECURITY_ENABLED:true}
+    issuer-uri: ${OIDC_ISSUER_URI:}
+    jwk-set-uri: ${OIDC_JWKS_URI:}
+    expected-audiences: ${OIDC_AUDIENCES:}
+    personnel-authorities:
+      - ROLE_ADMIN
+      - ROLE_PERSONNEL_VIEWER
+    admin-authorities:
+      - ROLE_ADMIN
+    observability-authorities:
+      - ROLE_ADMIN
+      - ROLE_OBSERVABILITY
+    dashboard-authorities:
+      - ROLE_ADMIN
+      - ROLE_MONITORING_USER
+      - ROLE_PERSONNEL_VIEWER
+    event-authorities:
+      - ROLE_ADMIN
+      - ROLE_MONITORING_USER
+    generator-authorities:
+      - ROLE_ADMIN
+      - ROLE_GENERATOR
+    local-dev-user:
+      principal-id: ${APP_LOCAL_USER_ID:local-operator}
+      roles:
+        - ADMIN
+        - MONITORING_USER
+        - PERSONNEL_VIEWER
+        - OBSERVABILITY
+  cors:
+    allowed-origins:
+      - ${APP_CORS_ALLOWED_ORIGIN_1:http://localhost:3000}
+      - ${APP_CORS_ALLOWED_ORIGIN_2:http://localhost:5173}
+  simulation:
+    enabled: ${APP_SIMULATION_ENABLED:true}
+    seed-on-startup: ${APP_SIMULATION_SEED_ON_STARTUP:true}
+    scheduler-enabled: ${APP_SIMULATION_SCHEDULER_ENABLED:true}
+    operational-seed-enabled: ${APP_SIMULATION_OPERATIONAL_SEED_ENABLED:true}
+    default-profile-name: ${APP_SIMULATION_DEFAULT_PROFILE:mzhd-main}
+    initial-event-count: ${APP_SIMULATION_INITIAL_EVENTS:4}
+    route-count: ${APP_SIMULATION_ROUTE_COUNT:13}
+
+generator:
+  messaging:
+    rabbitmq:
+      exchange: ${GENERATOR_MESSAGING_EXCHANGE:mzhd.generator.exchange}
+      routing-keys:
+        reference-network-request: ${GENERATOR_MESSAGING_REFERENCE_NETWORK_KEY:generator.reference-network.request}
+        active-events-request: ${GENERATOR_MESSAGING_ACTIVE_EVENTS_KEY:generator.active-events.request}
+        trains-sync: ${GENERATOR_MESSAGING_TRAINS_SYNC_KEY:generator.trains.sync}
+        events-sync: ${GENERATOR_MESSAGING_EVENTS_SYNC_KEY:generator.events.sync}
+        personnel-snapshot-sync: ${GENERATOR_MESSAGING_PERSONNEL_SYNC_KEY:generator.personnel.snapshot.sync}
+      queues:
+        reference-network-request: ${GENERATOR_MESSAGING_REFERENCE_NETWORK_QUEUE:mzhd.generator.reference-network.queue}
+        active-events-request: ${GENERATOR_MESSAGING_ACTIVE_EVENTS_QUEUE:mzhd.generator.active-events.queue}
+        trains-sync: ${GENERATOR_MESSAGING_TRAINS_SYNC_QUEUE:mzhd.generator.trains-sync.queue}
+        events-sync: ${GENERATOR_MESSAGING_EVENTS_SYNC_QUEUE:mzhd.generator.events-sync.queue}
+        personnel-snapshot-sync: ${GENERATOR_MESSAGING_PERSONNEL_SYNC_QUEUE:mzhd.generator.personnel-sync.queue}
+
+logging:
+  pattern:
+    level: "%5p [requestId=%X{requestId:-}, traceId=%X{traceId:-}]"

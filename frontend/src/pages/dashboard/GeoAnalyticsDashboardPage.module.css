@@ -1,0 +1,130 @@
+.page {
+  min-height: calc(100vh - 5rem);
+}
+
+.workspace {
+  position: relative;
+  min-height: calc(100vh - 5rem);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(26, 125, 157, 0.14), transparent 20%),
+    linear-gradient(180deg, rgba(223, 233, 243, 0.25), rgba(245, 240, 231, 0.35));
+}
+
+.mapSurface {
+  position: absolute;
+  inset: 0;
+}
+
+.filtersToggle,
+.feedToggle,
+.controlDock,
+.rightRail {
+  position: absolute;
+  z-index: 10;
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.controlDock {
+  top: 1rem;
+  left: 1rem;
+  width: min(44rem, calc(100% - 27rem));
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+}
+
+.filtersToggle {
+  top: 1rem;
+  left: 1rem;
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(18, 42, 66, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(10px);
+}
+
+.feedToggle {
+  top: 1rem;
+  right: 1rem;
+  z-index: 11;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(18, 42, 66, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(10px);
+}
+
+.rightRail {
+  top: 1rem;
+  bottom: 1rem;
+  right: 1rem;
+  width: min(23rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow: auto;
+}
+
+.loadingShell {
+  padding: 1rem;
+}
+
+.emptyShell {
+  min-height: calc(100vh - 5rem);
+  display: grid;
+  place-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+@media (max-width: 1180px) {
+  .workspace {
+    display: grid;
+    grid-template-rows: minmax(60vh, 1fr) auto auto;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .mapSurface,
+  .filtersToggle,
+  .feedToggle,
+  .controlDock,
+  .rightRail {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-height: none;
+  }
+
+  .mapSurface {
+    min-height: 60vh;
+    border-radius: 1.5rem;
+    overflow: hidden;
+  }
+
+  .filtersToggle {
+    width: auto;
+    justify-self: start;
+  }
+
+  .feedToggle {
+    width: auto;
+    justify-self: end;
+  }
+
+  .controlDock,
+  .rightRail {
+    overflow: visible;
+  }
+}

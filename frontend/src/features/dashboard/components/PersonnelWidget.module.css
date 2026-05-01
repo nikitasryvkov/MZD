@@ -1,0 +1,38 @@
+.list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.row {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.95rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(18, 42, 66, 0.08);
+}
+
+.rowHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.rowHeader span,
+.row small {
+  color: var(--ink-soft);
+}
+
+.barTrack {
+  height: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(18, 42, 66, 0.08);
+}
+
+.barFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1a7d9d, #d18b2f);
+}

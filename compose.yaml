@@ -1,0 +1,144 @@
+name: mzd-dashboard
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: mzd_dashboard
+      POSTGRES_USER: dashboard
+      POSTGRES_PASSWORD: dashboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dashboard -d mzd_dashboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: dashboard
+      RABBITMQ_DEFAULT_PASS: dashboard
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+
+  backend:
+    build:
+      context: .
+      dockerfile: infra/docker/backend/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://db:5432/mzd_dashboard
+      DATABASE_USERNAME: dashboard
+      DATABASE_PASSWORD: dashboard
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: dashboard
+      RABBITMQ_PASSWORD: dashboard
+      APP_SECURITY_ENABLED: ${APP_SECURITY_ENABLED:-false}
+      APP_SIMULATION_SCHEDULER_ENABLED: ${APP_SIMULATION_SCHEDULER_ENABLED:-false}
+      APP_SIMULATION_OPERATIONAL_SEED_ENABLED: ${APP_SIMULATION_OPERATIONAL_SEED_ENABLED:-false}
+      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-}
+      OIDC_AUDIENCES: ${OIDC_AUDIENCES:-}
+      APP_CORS_ALLOWED_ORIGIN_1: http://localhost:5173
+      APP_CORS_ALLOWED_ORIGIN_2: http://127.0.0.1:5173
+      JAVA_OPTS: -Xms256m -Xmx512m
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/frontend/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+        VITE_WS_URL: ${VITE_WS_URL:-}
+        VITE_AUTH_ENABLED: ${VITE_AUTH_ENABLED:-false}
+        VITE_OIDC_AUTHORITY: ${VITE_OIDC_AUTHORITY:-}
+        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-}
+        VITE_OIDC_SCOPE: ${VITE_OIDC_SCOPE:-openid profile email}
+        VITE_OIDC_AUDIENCE: ${VITE_OIDC_AUDIENCE:-}
+        VITE_OIDC_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-}
+        VITE_OIDC_SILENT_REDIRECT_URI: ${VITE_OIDC_SILENT_REDIRECT_URI:-}
+        VITE_OIDC_POST_LOGOUT_REDIRECT_URI: ${VITE_OIDC_POST_LOGOUT_REDIRECT_URI:-}
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+  train-generator:
+    build:
+      context: .
+      dockerfile: infra/docker/generator-service/Dockerfile
+      args:
+        SERVICE_MODULE: mzhd-train-generator
+    depends_on:
+      backend:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: dashboard
+      RABBITMQ_PASSWORD: dashboard
+      TRAIN_GENERATOR_SOURCE_SYSTEM: ${TRAIN_GENERATOR_SOURCE_SYSTEM:-mzhd-train-generator}
+      TRAIN_GENERATOR_TICK_INTERVAL: ${TRAIN_GENERATOR_TICK_INTERVAL:-15s}
+
+  event-generator:
+    build:
+      context: .
+      dockerfile: infra/docker/generator-service/Dockerfile
+      args:
+        SERVICE_MODULE: mzhd-event-generator
+    depends_on:
+      backend:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: dashboard
+      RABBITMQ_PASSWORD: dashboard
+      EVENT_GENERATOR_SOURCE_SYSTEM: ${EVENT_GENERATOR_SOURCE_SYSTEM:-mzhd-event-generator}
+      EVENT_GENERATOR_TICK_INTERVAL: ${EVENT_GENERATOR_TICK_INTERVAL:-45s}
+      EVENT_GENERATOR_MAX_ACTIVE: ${EVENT_GENERATOR_MAX_ACTIVE:-6}
+
+  personnel-generator:
+    build:
+      context: .
+      dockerfile: infra/docker/generator-service/Dockerfile
+      args:
+        SERVICE_MODULE: mzhd-personnel-generator
+    depends_on:
+      backend:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: dashboard
+      RABBITMQ_PASSWORD: dashboard
+      PERSONNEL_GENERATOR_SOURCE_SYSTEM: ${PERSONNEL_GENERATOR_SOURCE_SYSTEM:-mzhd-personnel-generator}
+      PERSONNEL_GENERATOR_TICK_INTERVAL: ${PERSONNEL_GENERATOR_TICK_INTERVAL:-6h}
+
+volumes:
+  postgres_data:

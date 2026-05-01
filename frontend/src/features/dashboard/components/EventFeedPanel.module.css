@@ -1,0 +1,57 @@
+.panel {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(246, 248, 252, 0.68));
+  backdrop-filter: blur(14px);
+}
+
+.panel header {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.hideButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+}
+
+.feed {
+  display: grid;
+  gap: 0.75rem;
+  max-height: 18rem;
+  overflow: auto;
+  padding-right: 0.2rem;
+}
+
+.eventRow {
+  display: grid;
+  gap: 0.55rem;
+  text-align: left;
+  border-radius: 1.1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.48);
+  border: 1px solid rgba(18, 42, 66, 0.1);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+.eventRow[data-selected='true'] {
+  border-color: rgba(26, 125, 157, 0.32);
+  background: rgba(26, 125, 157, 0.12);
+}
+
+.eventHeader,
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.metaRow span,
+.eventRow small {
+  color: var(--ink-soft);
+}

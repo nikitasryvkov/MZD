@@ -1,0 +1,34 @@
+server:
+  port: 8092
+
+spring:
+  application:
+    name: mzhd-event-generator
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:dashboard}
+    password: ${RABBITMQ_PASSWORD:dashboard}
+    template:
+      reply-timeout: ${GENERATOR_MESSAGING_REPLY_TIMEOUT:10s}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+generator:
+  client:
+    exchange: ${GENERATOR_MESSAGING_EXCHANGE:mzhd.generator.exchange}
+    routing-keys:
+      reference-network-request: ${GENERATOR_MESSAGING_REFERENCE_NETWORK_KEY:generator.reference-network.request}
+      active-events-request: ${GENERATOR_MESSAGING_ACTIVE_EVENTS_KEY:generator.active-events.request}
+      trains-sync: ${GENERATOR_MESSAGING_TRAINS_SYNC_KEY:generator.trains.sync}
+      events-sync: ${GENERATOR_MESSAGING_EVENTS_SYNC_KEY:generator.events.sync}
+      personnel-snapshot-sync: ${GENERATOR_MESSAGING_PERSONNEL_SYNC_KEY:generator.personnel.snapshot.sync}
+  event:
+    source-system: ${EVENT_GENERATOR_SOURCE_SYSTEM:mzhd-event-generator}
+    time-zone: ${EVENT_GENERATOR_TIME_ZONE:Europe/Moscow}
+    tick-interval: ${EVENT_GENERATOR_TICK_INTERVAL:45s}
+    max-active-events: ${EVENT_GENERATOR_MAX_ACTIVE:6}

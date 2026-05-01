@@ -1,0 +1,41 @@
+# OS and editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Environment and local overrides
+.env
+.env.*
+!.env.example
+application-local*.yml
+
+# Node / frontend
+node_modules/
+dist/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Java / Maven
+target/
+bin/
+.mvn/wrapper/maven-wrapper.jar
+
+# Local build and dependency caches
+.m2/
+.m2-*/
+.tools/
+.agents/
+
+# Runtime artifacts
+logs/
+*.log
+tmp/
+temp/
+
+# Docker local state
+*.pid

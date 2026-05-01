@@ -1,0 +1,121 @@
+.shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid rgba(18, 42, 66, 0.1);
+  background: rgba(251, 252, 255, 0.88);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 0.95rem;
+  background: linear-gradient(135deg, #0e4059, #1a7d9d);
+  color: white;
+  font-family: 'IBM Plex Mono', Consolas, monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand span {
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.nav {
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.65rem;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  color: var(--ink-muted);
+  text-decoration: none;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
+}
+
+.navLink:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--ink-strong);
+}
+
+.navLinkActive {
+  background: rgba(26, 125, 157, 0.12);
+  color: var(--accent-strong);
+  box-shadow: inset 0 0 0 1px rgba(26, 125, 157, 0.18);
+}
+
+.headerActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.userChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(18, 42, 66, 0.1);
+  color: var(--ink-strong);
+}
+
+.secondaryButton {
+  min-height: 2.5rem;
+}
+
+.main {
+  min-height: 0;
+}
+
+@media (max-width: 1080px) {
+  .header {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .nav,
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
