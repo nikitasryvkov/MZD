@@ -19,6 +19,8 @@ export function EventsPage() {
     queryKey: dashboardKeys.snapshot(defaultRequest),
     queryFn: ({ signal }) => queryDashboardSnapshot(defaultRequest, signal),
   })
+  const isInitialLoading = dashboardQuery.isLoading && !dashboardQuery.data
+  const isInitialError = dashboardQuery.isError && !dashboardQuery.data
 
   return (
     <div className={styles.page}>
@@ -31,52 +33,74 @@ export function EventsPage() {
         </p>
       </section>
 
-      <div className={styles.contentGrid}>
-        <EventFeedPanel
-          events={dashboardQuery.data?.eventsPreview ?? []}
-          selectedEventId={selectedEventId}
-          onSelectEvent={setSelectedEventId}
-        />
-
-        <Panel
-          title="Просмотр событий"
-          eyebrow="Порядок работы"
-          subtitle="Краткая информация по разделу."
-          accent="warm"
-        >
-          <div className={styles.singleColumn}>
-            <div>
-              <strong>Приоритет</strong>
-              <p>В первую очередь проверяйте события с высоким уровнем важности.</p>
-            </div>
-            <div>
-              <strong>Статус</strong>
-              <p>По метке статуса видно, какие события новые, а какие уже находятся в работе.</p>
-            </div>
-            <div>
-              <strong>Переход к карте</strong>
-              <p>Для просмотра участка на схеме откройте раздел «Карта» в верхнем меню.</p>
-            </div>
-          </div>
-        </Panel>
-      </div>
-
-      {dashboardQuery.isError ? (
-        <Panel title="Не удалось загрузить события" eyebrow="Внимание" accent="warm">
-          <div className={styles.singleColumn}>
-            <p>Повторите попытку позже.</p>
-          </div>
-        </Panel>
-      ) : null}
-
-      {dashboardQuery.isLoading && !dashboardQuery.data ? (
+      {isInitialLoading ? (
         <section className={styles.empty}>
           <EmptyState
             title="Загрузка событий"
             description="Подождите несколько секунд."
           />
         </section>
-      ) : null}
+      ) : isInitialError ? (
+        <Panel
+          title="Не удалось загрузить события"
+          eyebrow="Внимание"
+          accent="warm"
+        >
+          <div className={styles.singleColumn}>
+            <p>Повторите попытку позже.</p>
+            <button type="button" onClick={() => void dashboardQuery.refetch()}>
+              Повторить
+            </button>
+          </div>
+        </Panel>
+      ) : (
+        <>
+          <div className={styles.contentGrid}>
+            <EventFeedPanel
+              events={dashboardQuery.data?.eventsPreview ?? []}
+              selectedEventId={selectedEventId}
+              onSelectEvent={setSelectedEventId}
+            />
+
+            <Panel
+              title="Просмотр событий"
+              eyebrow="Порядок работы"
+              subtitle="Краткая информация по разделу."
+              accent="warm"
+            >
+              <div className={styles.singleColumn}>
+                <div>
+                  <strong>Приоритет</strong>
+                  <p>В первую очередь проверяйте события с высоким уровнем важности.</p>
+                </div>
+                <div>
+                  <strong>Статус</strong>
+                  <p>По метке статуса видно, какие события новые, а какие уже находятся в работе.</p>
+                </div>
+                <div>
+                  <strong>Переход к карте</strong>
+                  <p>Для просмотра участка на схеме откройте раздел «Карта» в верхнем меню.</p>
+                </div>
+              </div>
+            </Panel>
+          </div>
+
+          {dashboardQuery.isError ? (
+            <Panel
+              title="Данные событий не обновились"
+              eyebrow="Внимание"
+              accent="warm"
+            >
+              <div className={styles.singleColumn}>
+                <p>Показаны последние доступные данные.</p>
+                <button type="button" onClick={() => void dashboardQuery.refetch()}>
+                  Повторить
+                </button>
+              </div>
+            </Panel>
+          ) : null}
+        </>
+      )}
 
       <ObjectDetailsDrawer
         selection={selectedEventId ? { kind: 'event', id: selectedEventId } : null}

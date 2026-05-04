@@ -23,7 +23,7 @@ COPY backend/src src
 
 RUN --mount=type=cache,target=/root/.m2 \
     sh -ec 'for attempt in 1 2 3; do \
-      ./mvnw -B -q -Dmaven.test.skip=true package && exit 0; \
+      ./mvnw -B -q package && exit 0; \
       echo "Maven package failed on attempt ${attempt}, retrying..." >&2; \
       sleep $((attempt * 5)); \
     done; \
@@ -31,6 +31,10 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /workspace/backend/target/geoanalytics-dashboard-backend-0.1.0-SNAPSHOT.jar /app/app.jar
 

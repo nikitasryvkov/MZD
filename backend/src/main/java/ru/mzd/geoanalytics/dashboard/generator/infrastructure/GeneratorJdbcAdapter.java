@@ -277,6 +277,7 @@ public class GeneratorJdbcAdapter implements GeneratorPersistencePort {
             SELECT id, status::text AS status
             FROM dashboard.operational_event
             WHERE id = :id
+            FOR UPDATE
             """, new MapSqlParameterSource("id", command.id()), resultSet ->
             resultSet.next()
                 ? new ExistingEvent(getUuid(resultSet, "id"), EventStatus.valueOf(resultSet.getString("status")))

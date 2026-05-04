@@ -1,74 +1,128 @@
 package ru.mzd.geoanalytics.dashboard.streaming;
 
-import java.time.Clock;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
-import ru.mzd.geoanalytics.dashboard.dashboard.api.DashboardApiModels;
-import ru.mzd.geoanalytics.dashboard.dashboard.infrastructure.MapLibreGeoJsonAssembler;
 
 @Component
 public class DashboardStreamingGateway {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final MapLibreGeoJsonAssembler mapLibreGeoJsonAssembler;
-    private final Clock clock;
-    private final AtomicLong trainSequence = new AtomicLong();
-    private final AtomicLong eventSequence = new AtomicLong();
+    private final ObjectMapper objectMapper;
 
     public DashboardStreamingGateway(
         SimpMessagingTemplate messagingTemplate,
-        MapLibreGeoJsonAssembler mapLibreGeoJsonAssembler,
-        Clock clock
+        ObjectMapper objectMapper
     ) {
         this.messagingTemplate = messagingTemplate;
-        this.mapLibreGeoJsonAssembler = mapLibreGeoJsonAssembler;
-        this.clock = clock;
+        this.objectMapper = objectMapper;
     }
 
-    public void publishTrainUpsert(DashboardApiModels.TrainResponse train) {
-        messagingTemplate.convertAndSend(StreamingTopics.TRAINS, new StreamingMessages.TrainUpdateMessage(
-            UUID.randomUUID(),
-            trainSequence.incrementAndGet(),
-            Instant.now(clock),
-            StreamingMessages.StreamOperation.UPSERT.name(),
+    public StreamingMessages.TrainUpdateMessage createTrainUpdateMessage(
+        StreamingMessages.StreamOperation operation,
+        StreamingMessages.TrainPayload train,
+        UUID messageId,
+        long sequence,
+        Instant generatedAt
+    ) {
+        return new StreamingMessages.TrainUpdateMessage(
+            messageId,
+            sequence,
+            generatedAt,
+            operation.name(),
             train,
-            mapLibreGeoJsonAssembler.toTrainFeature(train)
-        ));
+            toTrainFeature(train)
+        );
     }
 
-    public void publishTrainRemove(DashboardApiModels.TrainResponse train) {
-        messagingTemplate.convertAndSend(StreamingTopics.TRAINS, new StreamingMessages.TrainUpdateMessage(
-            UUID.randomUUID(),
-            trainSequence.incrementAndGet(),
-            Instant.now(clock),
-            StreamingMessages.StreamOperation.REMOVE.name(),
-            train,
-            mapLibreGeoJsonAssembler.toTrainFeature(train)
-        ));
-    }
-
-    public void publishEventUpsert(DashboardApiModels.OperationalEventResponse event) {
-        messagingTemplate.convertAndSend(StreamingTopics.EVENTS, new StreamingMessages.EventUpdateMessage(
-            UUID.randomUUID(),
-            eventSequence.incrementAndGet(),
-            Instant.now(clock),
-            StreamingMessages.StreamOperation.UPSERT.name(),
+    public StreamingMessages.EventUpdateMessage createEventUpdateMessage(
+        StreamingMessages.StreamOperation operation,
+        StreamingMessages.EventPayload event,
+        UUID messageId,
+        long sequence,
+        Instant generatedAt
+    ) {
+        return new StreamingMessages.EventUpdateMessage(
+            messageId,
+            sequence,
+            generatedAt,
+            operation.name(),
             event,
-            mapLibreGeoJsonAssembler.toOperationalEventFeature(event)
+            toOperationalEventFeature(event)
+        );
+    }
+
+    public void publishTrainUpdate(StreamingMessages.TrainUpdateMessage message) {
+        messagingTemplate.convertAndSend(StreamingTopics.TRAINS, message);
+    }
+
+    public void publishEventUpdate(StreamingMessages.EventUpdateMessage message) {
+        messagingTemplate.convertAndSend(StreamingTopics.EVENTS, message);
+    }
+
+    private StreamingMessages.GeoJsonFeature toTrainFeature(StreamingMessages.TrainPayload train) {
+        return new StreamingMessages.GeoJsonFeature(
+            "Feature",
+            train.id().toString(),
+            pointGeometry(train.longitude(), train.latitude()),
+            compactProperties(
+                "id", train.id().toString(),
+                "kind", "train",
+                "trainNumber", train.trainNumber(),
+                "status", train.status(),
+                "currentStationId", stringify(train.currentStationId()),
+                "nextStationId", stringify(train.nextStationId()),
+                "progressPercent", train.progressPercent(),
+                "speedKmh", train.speedKmh(),
+                "lastUpdated", stringify(train.lastUpdated())
+            )
+        );
+    }
+
+    private StreamingMessages.GeoJsonFeature toOperationalEventFeature(StreamingMessages.EventPayload event) {
+        return new StreamingMessages.GeoJsonFeature(
+            "Feature",
+            event.id().toString(),
+            pointGeometry(event.longitude(), event.latitude()),
+            compactProperties(
+                "id", event.id().toString(),
+                "kind", "event",
+                "title", event.title(),
+                "status", event.status(),
+                "severity", event.severity(),
+                "affectedObjectId", stringify(event.affectedObjectId()),
+                "affectedSection", event.affectedSection(),
+                "startedAt", stringify(event.startedAt()),
+                "updatedAt", stringify(event.updatedAt())
+            )
+        );
+    }
+
+    private JsonNode pointGeometry(double longitude, double latitude) {
+        return objectMapper.valueToTree(Map.of(
+            "type", "Point",
+            "coordinates", List.of(longitude, latitude)
         ));
     }
 
-    public void publishEventRemove(DashboardApiModels.OperationalEventResponse event) {
-        messagingTemplate.convertAndSend(StreamingTopics.EVENTS, new StreamingMessages.EventUpdateMessage(
-            UUID.randomUUID(),
-            eventSequence.incrementAndGet(),
-            Instant.now(clock),
-            StreamingMessages.StreamOperation.REMOVE.name(),
-            event,
-            mapLibreGeoJsonAssembler.toOperationalEventFeature(event)
-        ));
+    private Map<String, Object> compactProperties(Object... keyValuePairs) {
+        Map<String, Object> properties = new LinkedHashMap<>();
+        for (int index = 0; index < keyValuePairs.length; index += 2) {
+            Object value = keyValuePairs[index + 1];
+            if (value != null) {
+                properties.put(String.valueOf(keyValuePairs[index]), value);
+            }
+        }
+        return properties;
+    }
+
+    private String stringify(Object value) {
+        return value == null ? null : value.toString();
     }
 }

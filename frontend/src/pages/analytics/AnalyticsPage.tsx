@@ -15,6 +15,8 @@ export function AnalyticsPage() {
     queryKey: dashboardKeys.snapshot(defaultRequest),
     queryFn: ({ signal }) => queryDashboardSnapshot(defaultRequest, signal),
   })
+  const isInitialLoading = dashboardQuery.isLoading && !dashboardQuery.data
+  const isInitialError = dashboardQuery.isError && !dashboardQuery.data
 
   return (
     <div className={styles.page}>
@@ -26,13 +28,26 @@ export function AnalyticsPage() {
         </p>
       </section>
 
-      {dashboardQuery.isLoading && !dashboardQuery.data ? (
+      {isInitialLoading ? (
         <section className={styles.empty}>
           <EmptyState
             title="Загрузка сводки"
             description="Подождите несколько секунд."
           />
         </section>
+      ) : isInitialError ? (
+        <Panel
+          title="Не удалось загрузить сводку"
+          eyebrow="Внимание"
+          accent="warm"
+        >
+          <div className={styles.singleColumn}>
+            <p>Повторите попытку позже.</p>
+            <button type="button" onClick={() => void dashboardQuery.refetch()}>
+              Повторить
+            </button>
+          </div>
+        </Panel>
       ) : (
         <div className={styles.contentGrid}>
           <div className={styles.singleColumn}>
@@ -61,6 +76,20 @@ export function AnalyticsPage() {
               </div>
             </Panel>
           </div>
+          {dashboardQuery.isError ? (
+            <Panel
+              title="Данные сводки не обновились"
+              eyebrow="Внимание"
+              accent="warm"
+            >
+              <div className={styles.singleColumn}>
+                <p>Показаны последние доступные данные.</p>
+                <button type="button" onClick={() => void dashboardQuery.refetch()}>
+                  Повторить
+                </button>
+              </div>
+            </Panel>
+          ) : null}
         </div>
       )}
     </div>

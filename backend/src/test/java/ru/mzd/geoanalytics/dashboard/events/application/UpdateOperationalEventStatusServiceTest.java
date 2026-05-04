@@ -5,23 +5,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
-import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.mzd.geoanalytics.dashboard.analytics.KpiProjectionService;
-import ru.mzd.geoanalytics.dashboard.audit.SecurityAuditService;
-import ru.mzd.geoanalytics.dashboard.dashboard.api.DashboardApiModels;
-import ru.mzd.geoanalytics.dashboard.events.api.OperationalEventApiModels;
+import ru.mzd.geoanalytics.dashboard.analytics.application.port.KpiProjectionPort;
+import ru.mzd.geoanalytics.dashboard.events.application.model.OperationalEventProjection;
+import ru.mzd.geoanalytics.dashboard.events.application.model.OperationalEventStatusUpdateCommand;
+import ru.mzd.geoanalytics.dashboard.events.application.model.OperationalEventStatusUpdateView;
+import ru.mzd.geoanalytics.dashboard.events.application.port.OperationalEventAuditPort;
 import ru.mzd.geoanalytics.dashboard.events.application.port.OperationalEventPersistencePort;
+import ru.mzd.geoanalytics.dashboard.events.application.port.OperationalEventStreamingPort;
 import ru.mzd.geoanalytics.dashboard.events.domain.EventStatus;
 import ru.mzd.geoanalytics.dashboard.events.domain.OperationalEventAggregate;
 import ru.mzd.geoanalytics.dashboard.events.domain.OperationalEventStatusUpdateResult;
-import ru.mzd.geoanalytics.dashboard.security.AuthenticatedUser;
-import ru.mzd.geoanalytics.dashboard.streaming.DashboardStreamingGateway;
 
 @ExtendWith(MockitoExtension.class)
 class UpdateOperationalEventStatusServiceTest {
@@ -29,11 +28,11 @@ class UpdateOperationalEventStatusServiceTest {
     @Mock
     private OperationalEventPersistencePort persistencePort;
     @Mock
-    private KpiProjectionService kpiProjectionService;
+    private KpiProjectionPort kpiProjectionPort;
     @Mock
-    private DashboardStreamingGateway dashboardStreamingGateway;
+    private OperationalEventStreamingPort operationalEventStreamingPort;
     @Mock
-    private SecurityAuditService securityAuditService;
+    private OperationalEventAuditPort operationalEventAuditPort;
 
     @InjectMocks
     private UpdateOperationalEventStatusService service;
@@ -60,10 +59,10 @@ class UpdateOperationalEventStatusServiceTest {
             )
         );
         when(persistencePort.findEventProjection(eventId)).thenReturn(java.util.Optional.of(
-            new DashboardApiModels.OperationalEventResponse(
+            new OperationalEventProjection(
                 eventId,
                 "Signal disruption",
-                "IN_PROGRESS",
+                EventStatus.IN_PROGRESS,
                 "HIGH",
                 55.75,
                 37.61,
@@ -74,16 +73,19 @@ class UpdateOperationalEventStatusServiceTest {
             )
         ));
 
-        OperationalEventApiModels.UpdateOperationalEventStatusResponse response = service.updateStatus(
+        OperationalEventStatusUpdateView response = service.updateStatus(
             eventId,
-            new OperationalEventApiModels.UpdateOperationalEventStatusRequest("IN_PROGRESS", "Dispatcher took ownership"),
-            new AuthenticatedUser("operator-1", Set.of("ROLE_MONITORING_USER"))
+            new OperationalEventStatusUpdateCommand(
+                EventStatus.IN_PROGRESS,
+                "Dispatcher took ownership",
+                "operator-1"
+            )
         );
 
-        assertThat(response.status()).isEqualTo("IN_PROGRESS");
-        assertThat(response.allowedTransitions()).containsExactly("RESOLVED", "CANCELED");
-        verify(kpiProjectionService).recalculateGlobalSnapshot();
-        verify(securityAuditService).recordEventStatusChange(eventId, "operator-1", "IN_PROGRESS");
-        verify(dashboardStreamingGateway).publishEventUpsert(org.mockito.ArgumentMatchers.any());
+        assertThat(response.status()).isEqualTo(EventStatus.IN_PROGRESS);
+        assertThat(response.allowedTransitions()).containsExactly(EventStatus.RESOLVED, EventStatus.CANCELED);
+        verify(kpiProjectionPort).recalculateGlobalSnapshot();
+        verify(operationalEventAuditPort).recordStatusChange(eventId, "operator-1", "IN_PROGRESS");
+        verify(operationalEventStreamingPort).publishEventUpsert(org.mockito.ArgumentMatchers.any());
     }
 }

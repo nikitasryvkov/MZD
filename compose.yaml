@@ -5,14 +5,14 @@ services:
     image: postgis/postgis:16-3.4
     environment:
       POSTGRES_DB: mzd_dashboard
-      POSTGRES_USER: dashboard
-      POSTGRES_PASSWORD: dashboard
+      POSTGRES_USER: ${DATABASE_USERNAME:-dashboard}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-dashboard}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${DATABASE_HOST_PORT:-15432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dashboard -d mzd_dashboard"]
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d mzd_dashboard"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -20,12 +20,15 @@ services:
 
   rabbitmq:
     image: rabbitmq:3.13-management
+    command: >
+      sh -c "rabbitmq-plugins enable --offline rabbitmq_stomp && rabbitmq-server"
     environment:
-      RABBITMQ_DEFAULT_USER: dashboard
-      RABBITMQ_DEFAULT_PASS: dashboard
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-dashboard}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dashboard}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:61613:61613"
+      - "127.0.0.1:15672:15672"
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -44,12 +47,19 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: jdbc:postgresql://db:5432/mzd_dashboard
-      DATABASE_USERNAME: dashboard
-      DATABASE_PASSWORD: dashboard
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-dashboard}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-dashboard}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: dashboard
-      RABBITMQ_PASSWORD: dashboard
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-dashboard}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dashboard}
+      APP_STREAMING_BROKER_RELAY_ENABLED: ${APP_STREAMING_BROKER_RELAY_ENABLED:-true}
+      APP_STREAMING_BROKER_RELAY_HOST: rabbitmq
+      APP_STREAMING_BROKER_RELAY_PORT: 61613
+      APP_STREAMING_BROKER_RELAY_CLIENT_LOGIN: ${RABBITMQ_USERNAME:-dashboard}
+      APP_STREAMING_BROKER_RELAY_CLIENT_PASSCODE: ${RABBITMQ_PASSWORD:-dashboard}
+      APP_STREAMING_BROKER_RELAY_SYSTEM_LOGIN: ${RABBITMQ_USERNAME:-dashboard}
+      APP_STREAMING_BROKER_RELAY_SYSTEM_PASSCODE: ${RABBITMQ_PASSWORD:-dashboard}
       APP_SECURITY_ENABLED: ${APP_SECURITY_ENABLED:-false}
       APP_SIMULATION_SCHEDULER_ENABLED: ${APP_SIMULATION_SCHEDULER_ENABLED:-false}
       APP_SIMULATION_OPERATIONAL_SEED_ENABLED: ${APP_SIMULATION_OPERATIONAL_SEED_ENABLED:-false}
@@ -60,7 +70,13 @@ services:
       APP_CORS_ALLOWED_ORIGIN_2: http://127.0.0.1:5173
       JAVA_OPTS: -Xms256m -Xmx512m
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/actuator/health >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
   frontend:
     build:
@@ -78,9 +94,10 @@ services:
         VITE_OIDC_SILENT_REDIRECT_URI: ${VITE_OIDC_SILENT_REDIRECT_URI:-}
         VITE_OIDC_POST_LOGOUT_REDIRECT_URI: ${VITE_OIDC_POST_LOGOUT_REDIRECT_URI:-}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
-      - "5173:80"
+      - "127.0.0.1:5173:80"
 
   train-generator:
     build:
@@ -90,14 +107,14 @@ services:
         SERVICE_MODULE: mzhd-train-generator
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: dashboard
-      RABBITMQ_PASSWORD: dashboard
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-dashboard}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dashboard}
       TRAIN_GENERATOR_SOURCE_SYSTEM: ${TRAIN_GENERATOR_SOURCE_SYSTEM:-mzhd-train-generator}
       TRAIN_GENERATOR_TICK_INTERVAL: ${TRAIN_GENERATOR_TICK_INTERVAL:-15s}
 
@@ -109,14 +126,14 @@ services:
         SERVICE_MODULE: mzhd-event-generator
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: dashboard
-      RABBITMQ_PASSWORD: dashboard
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-dashboard}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dashboard}
       EVENT_GENERATOR_SOURCE_SYSTEM: ${EVENT_GENERATOR_SOURCE_SYSTEM:-mzhd-event-generator}
       EVENT_GENERATOR_TICK_INTERVAL: ${EVENT_GENERATOR_TICK_INTERVAL:-45s}
       EVENT_GENERATOR_MAX_ACTIVE: ${EVENT_GENERATOR_MAX_ACTIVE:-6}
@@ -129,14 +146,14 @@ services:
         SERVICE_MODULE: mzhd-personnel-generator
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
       rabbitmq:
         condition: service_healthy
     environment:
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
-      RABBITMQ_USERNAME: dashboard
-      RABBITMQ_PASSWORD: dashboard
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-dashboard}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-dashboard}
       PERSONNEL_GENERATOR_SOURCE_SYSTEM: ${PERSONNEL_GENERATOR_SOURCE_SYSTEM:-mzhd-personnel-generator}
       PERSONNEL_GENERATOR_TICK_INTERVAL: ${PERSONNEL_GENERATOR_TICK_INTERVAL:-6h}
 

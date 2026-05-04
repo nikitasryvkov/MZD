@@ -42,13 +42,13 @@ public final class DashboardApiModels {
         @AssertTrue(message = "bbox.maxLat must be greater than bbox.minLat")
         @JsonIgnore
         public boolean isLatitudeRangeValid() {
-            return maxLat > minLat;
+            return minLat == null || maxLat == null || maxLat > minLat;
         }
 
         @AssertTrue(message = "bbox.maxLon must be greater than bbox.minLon")
         @JsonIgnore
         public boolean isLongitudeRangeValid() {
-            return maxLon > minLon;
+            return minLon == null || maxLon == null || maxLon > minLon;
         }
     }
 
@@ -67,7 +67,7 @@ public final class DashboardApiModels {
         @AssertTrue(message = "timeRange.to must be later than timeRange.from")
         @JsonIgnore
         public boolean isRangeValid() {
-            return to.isAfter(from);
+            return from == null || to == null || to.isAfter(from);
         }
     }
 

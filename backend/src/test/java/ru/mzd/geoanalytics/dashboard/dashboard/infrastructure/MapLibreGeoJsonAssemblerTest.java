@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import ru.mzd.geoanalytics.dashboard.dashboard.api.DashboardApiModels;
+import ru.mzd.geoanalytics.dashboard.dashboard.application.model.DashboardViewModels;
 
 class MapLibreGeoJsonAssemblerTest {
 
@@ -22,8 +22,8 @@ class MapLibreGeoJsonAssemblerTest {
         UUID trainId = UUID.randomUUID();
         UUID eventId = UUID.randomUUID();
 
-        DashboardApiModels.MapDataResponse source = new DashboardApiModels.MapDataResponse(
-            List.of(new DashboardApiModels.StationResponse(
+        DashboardViewModels.MapDataView source = new DashboardViewModels.MapDataView(
+            List.of(new DashboardViewModels.StationView(
                 stationId,
                 "MSK",
                 "Moscow",
@@ -31,7 +31,7 @@ class MapLibreGeoJsonAssemblerTest {
                 37.6173,
                 "HUB"
             )),
-            List.of(new DashboardApiModels.RouteSegmentResponse(
+            List.of(new DashboardViewModels.RouteSegmentView(
                 segmentId,
                 stationId,
                 nextStationId,
@@ -44,7 +44,7 @@ class MapLibreGeoJsonAssemblerTest {
                 18.4,
                 "NORMAL"
             )),
-            List.of(new DashboardApiModels.TrainResponse(
+            List.of(new DashboardViewModels.TrainView(
                 trainId,
                 "7001",
                 55.761,
@@ -56,7 +56,7 @@ class MapLibreGeoJsonAssemblerTest {
                 82.0,
                 Instant.parse("2026-04-22T08:00:00Z")
             )),
-            List.of(new DashboardApiModels.OperationalEventResponse(
+            List.of(new DashboardViewModels.OperationalEventView(
                 eventId,
                 "Signal disruption",
                 "IN_PROGRESS",
@@ -71,7 +71,7 @@ class MapLibreGeoJsonAssemblerTest {
             null
         );
 
-        DashboardApiModels.MapDataResponse enriched = assembler.enrichMapData(source);
+        DashboardViewModels.MapDataView enriched = assembler.enrichMapData(source);
 
         assertThat(enriched.geoJsonSources()).isNotNull();
         assertThat(enriched.geoJsonSources().stations().type()).isEqualTo("FeatureCollection");
@@ -79,11 +79,11 @@ class MapLibreGeoJsonAssemblerTest {
         assertThat(enriched.geoJsonSources().trains().features()).hasSize(1);
         assertThat(enriched.geoJsonSources().operationalEvents().features()).hasSize(1);
 
-        DashboardApiModels.GeoJsonFeatureResponse stationFeature =
+        DashboardViewModels.GeoJsonFeatureView stationFeature =
             enriched.geoJsonSources().stations().features().get(0);
-        DashboardApiModels.GeoJsonFeatureResponse trainFeature =
+        DashboardViewModels.GeoJsonFeatureView trainFeature =
             enriched.geoJsonSources().trains().features().get(0);
-        DashboardApiModels.GeoJsonFeatureResponse eventFeature =
+        DashboardViewModels.GeoJsonFeatureView eventFeature =
             enriched.geoJsonSources().operationalEvents().features().get(0);
 
         assertThat(stationFeature.id()).isEqualTo(stationId.toString());

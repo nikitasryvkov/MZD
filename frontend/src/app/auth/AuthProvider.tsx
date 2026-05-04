@@ -10,10 +10,14 @@ import { UserManager, WebStorageStateStore, type User } from 'oidc-client-ts'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { AuthContext, type AuthContextValue, type AuthStatus } from './authContext'
 import { getAuthConfiguration } from './authConfig'
+import { getCurrentUser, type CurrentUserResponse } from './currentUserApi'
 import { setCurrentAccessToken } from './authSession'
 import styles from './AuthProvider.module.css'
 
 const SKIP_AUTO_SIGN_IN_KEY = 'mzd-dashboard.skip-auto-sign-in'
+const EMPTY_AUTH_PERMISSIONS: CurrentUserResponse['permissions'] = {
+  canViewPersonnel: false,
+}
 
 function getUserDisplayName(user?: User) {
   if (!user) {
@@ -41,6 +45,14 @@ function describeError(error: unknown) {
   return 'Ошибка авторизации.'
 }
 
+function resolveSafeReturnTo(value: unknown) {
+  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) {
+    return '/'
+  }
+
+  return value
+}
+
 async function loadUser(manager: UserManager) {
   let user = await manager.getUser()
   if (user?.expired) {
@@ -60,10 +72,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const location = useLocation()
   const navigate = useNavigate()
   const redirectAttemptedRef = useRef(false)
+  const authoritiesRequestIdRef = useRef(0)
   const [status, setStatus] = useState<AuthStatus>(
     configuration.authEnabled ? 'loading' : 'disabled',
   )
   const [user, setUser] = useState<User>()
+  const [authorities, setAuthorities] = useState<string[]>([])
+  const [permissions, setPermissions] = useState<CurrentUserResponse['permissions']>(
+    EMPTY_AUTH_PERMISSIONS,
+  )
   const [errorMessage, setErrorMessage] = useState<string>()
 
   const userManager = useMemo(() => {
@@ -102,6 +119,49 @@ export function AuthProvider({ children }: PropsWithChildren) {
       ? configuration.validationErrors.join(' ')
       : errorMessage
   const effectiveUser = effectiveStatus === 'authenticated' ? user : undefined
+  const effectiveAuthorities = useMemo(
+    () => (effectiveStatus === 'authenticated' ? authorities : []),
+    [authorities, effectiveStatus],
+  )
+  const effectivePermissions = useMemo(
+    () => (effectiveStatus === 'authenticated' ? permissions : EMPTY_AUTH_PERMISSIONS),
+    [effectiveStatus, permissions],
+  )
+
+  const clearAuthorities = useCallback(() => {
+    authoritiesRequestIdRef.current += 1
+    setAuthorities([])
+    setPermissions(EMPTY_AUTH_PERMISSIONS)
+  }, [])
+
+  const loadCurrentUserAuthorities = useCallback(async () => {
+    const requestId = authoritiesRequestIdRef.current + 1
+    authoritiesRequestIdRef.current = requestId
+
+    try {
+      const currentUser = await getCurrentUser()
+      if (authoritiesRequestIdRef.current === requestId) {
+        setAuthorities(currentUser.authorities ?? [])
+        setPermissions(currentUser.permissions ?? EMPTY_AUTH_PERMISSIONS)
+      }
+    } catch {
+      if (authoritiesRequestIdRef.current === requestId) {
+        setAuthorities([])
+        setPermissions(EMPTY_AUTH_PERMISSIONS)
+      }
+    }
+  }, [])
+
+  const hasAuthority = useCallback(
+    (requiredAuthorities: string | string[]) => {
+      const required = Array.isArray(requiredAuthorities)
+        ? requiredAuthorities
+        : [requiredAuthorities]
+
+      return required.some((authority) => effectiveAuthorities.includes(authority))
+    },
+    [effectiveAuthorities],
+  )
 
   const signIn = useCallback(async () => {
     const manager = userManager
@@ -151,11 +211,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setErrorMessage(undefined)
       window.sessionStorage.removeItem(SKIP_AUTO_SIGN_IN_KEY)
       redirectAttemptedRef.current = false
+      void loadCurrentUserAuthorities()
     }
 
     function handleUserUnloaded() {
       setCurrentAccessToken(undefined)
       setUser(undefined)
+      clearAuthorities()
       setStatus('unauthenticated')
       setErrorMessage(undefined)
     }
@@ -179,6 +241,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     function handleSilentRenewError() {
       setCurrentAccessToken(undefined)
       setUser(undefined)
+      clearAuthorities()
       setStatus('unauthenticated')
       setErrorMessage('Сеанс истёк. Выполните вход повторно.')
     }
@@ -194,7 +257,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       activeUserManager.events.removeAccessTokenExpired(handleAccessTokenExpired)
       activeUserManager.events.removeSilentRenewError(handleSilentRenewError)
     }
-  }, [userManager])
+  }, [clearAuthorities, loadCurrentUserAuthorities, userManager])
 
   useEffect(() => {
     const manager = userManager
@@ -222,20 +285,23 @@ export function AuthProvider({ children }: PropsWithChildren) {
           const returnTo =
             typeof callbackUser.state === 'object' &&
             callbackUser.state !== null &&
-            'returnTo' in callbackUser.state &&
-            typeof callbackUser.state.returnTo === 'string'
-              ? callbackUser.state.returnTo
+            'returnTo' in callbackUser.state
+              ? resolveSafeReturnTo(callbackUser.state.returnTo)
               : '/'
 
           setCurrentAccessToken(callbackUser.access_token)
           setUser(callbackUser)
           setStatus('authenticated')
+          void loadCurrentUserAuthorities()
           navigate(returnTo, { replace: true })
           return
         }
 
         if (location.pathname === configuration.silentCallbackPath) {
           await activeUserManager.signinSilentCallback()
+          if (isActive && window.parent === window) {
+            navigate('/', { replace: true })
+          }
           return
         }
 
@@ -250,11 +316,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
           setStatus('authenticated')
           window.sessionStorage.removeItem(SKIP_AUTO_SIGN_IN_KEY)
           redirectAttemptedRef.current = false
+          void loadCurrentUserAuthorities()
           return
         }
 
         setCurrentAccessToken(undefined)
         setUser(undefined)
+        clearAuthorities()
         setStatus('unauthenticated')
       } catch (error) {
         if (!isActive) {
@@ -263,6 +331,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
         setCurrentAccessToken(undefined)
         setUser(undefined)
+        clearAuthorities()
         setStatus('error')
         setErrorMessage(describeError(error))
       }
@@ -273,7 +342,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return () => {
       isActive = false
     }
-  }, [configuration, location.pathname, navigate, userManager])
+  }, [clearAuthorities, configuration, loadCurrentUserAuthorities, location.pathname, navigate, userManager])
 
   useEffect(() => {
     if (
@@ -301,13 +370,28 @@ export function AuthProvider({ children }: PropsWithChildren) {
     userManager,
   ])
 
-  const contextValue: AuthContextValue = {
-    authEnabled: configuration.authEnabled,
-    status: effectiveStatus,
-    userName: getUserDisplayName(effectiveUser),
-    signIn,
-    signOut,
-  }
+  const contextValue = useMemo<AuthContextValue>(
+    () => ({
+      authEnabled: configuration.authEnabled,
+      status: effectiveStatus,
+      userName: getUserDisplayName(effectiveUser),
+      authorities: effectiveAuthorities,
+      permissions: effectivePermissions,
+      hasAuthority,
+      signIn,
+      signOut,
+    }),
+    [
+      configuration.authEnabled,
+      effectiveAuthorities,
+      effectivePermissions,
+      effectiveStatus,
+      effectiveUser,
+      hasAuthority,
+      signIn,
+      signOut,
+    ],
+  )
 
   if (
     effectiveStatus === 'loading' ||

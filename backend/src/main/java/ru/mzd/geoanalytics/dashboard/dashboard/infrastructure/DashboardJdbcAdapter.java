@@ -19,6 +19,9 @@ import ru.mzd.geoanalytics.dashboard.dashboard.domain.DashboardQuery;
 @Repository
 public class DashboardJdbcAdapter implements DashboardReadPort {
 
+    private static final int MAX_LAYER_ROWS = 1_000;
+    private static final int MAX_EVENTS_PREVIEW_ROWS = 100;
+
     private final NamedParameterJdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
 
@@ -41,6 +44,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
     @Override
     public List<DashboardViewModels.EventPreviewView> loadEventsPreview(DashboardQuery query) {
         MapSqlParameterSource parameters = baseParameters(query);
+        parameters.addValue("maxRows", MAX_EVENTS_PREVIEW_ROWS);
         StringBuilder sql = new StringBuilder("""
             SELECT
                 oe.id,
@@ -68,6 +72,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
                 + " oe.started_at DESC NULLS LAST,"
                 + " oe.updated_at DESC"
         );
+        sql.append(" LIMIT :maxRows");
 
         return jdbcTemplate.query(sql.toString(), parameters, (rs, rowNum) ->
             new DashboardViewModels.EventPreviewView(
@@ -165,6 +170,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
 
     private List<DashboardViewModels.StationView> loadStations(DashboardQuery query) {
         MapSqlParameterSource parameters = baseParameters(query);
+        parameters.addValue("maxRows", MAX_LAYER_ROWS);
         StringBuilder sql = new StringBuilder("""
             SELECT
                 s.id,
@@ -179,6 +185,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
             """);
         appendDepartmentAndBoundingFilters(sql, query, "io", "s.location");
         sql.append(" ORDER BY COALESCE(s.order_index, 2147483647), io.display_name");
+        sql.append(" LIMIT :maxRows");
 
         return jdbcTemplate.query(sql.toString(), parameters, (rs, rowNum) ->
             new DashboardViewModels.StationView(
@@ -194,6 +201,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
 
     private List<DashboardViewModels.RouteSegmentView> loadRouteSegments(DashboardQuery query) {
         MapSqlParameterSource parameters = baseParameters(query);
+        parameters.addValue("maxRows", MAX_LAYER_ROWS);
         StringBuilder sql = new StringBuilder("""
             SELECT
                 rs.id,
@@ -208,6 +216,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
             """);
         appendDepartmentAndBoundingFilters(sql, query, "io", "rs.geometry");
         sql.append(" ORDER BY rs.length_km DESC, rs.id");
+        sql.append(" LIMIT :maxRows");
 
         return jdbcTemplate.query(sql.toString(), parameters, (rs, rowNum) ->
             new DashboardViewModels.RouteSegmentView(
@@ -223,6 +232,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
 
     private List<DashboardViewModels.TrainView> loadTrains(DashboardQuery query) {
         MapSqlParameterSource parameters = baseParameters(query);
+        parameters.addValue("maxRows", MAX_LAYER_ROWS);
         StringBuilder sql = new StringBuilder("""
             SELECT
                 rsu.id,
@@ -242,6 +252,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
             """);
         appendTrainFilters(sql, query);
         sql.append(" ORDER BY rsu.train_number");
+        sql.append(" LIMIT :maxRows");
 
         return jdbcTemplate.query(sql.toString(), parameters, (rs, rowNum) ->
             new DashboardViewModels.TrainView(
@@ -261,6 +272,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
 
     private List<DashboardViewModels.OperationalEventView> loadOperationalEvents(DashboardQuery query) {
         MapSqlParameterSource parameters = baseParameters(query);
+        parameters.addValue("maxRows", MAX_LAYER_ROWS);
         StringBuilder sql = new StringBuilder("""
             SELECT
                 oe.id,
@@ -280,6 +292,7 @@ public class DashboardJdbcAdapter implements DashboardReadPort {
             """);
         appendEventFilters(sql, query, "oe");
         sql.append(" ORDER BY oe.updated_at DESC, oe.id");
+        sql.append(" LIMIT :maxRows");
 
         return jdbcTemplate.query(sql.toString(), parameters, (rs, rowNum) ->
             new DashboardViewModels.OperationalEventView(

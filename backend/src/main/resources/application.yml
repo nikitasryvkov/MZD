@@ -28,6 +28,12 @@ spring:
     listener:
       simple:
         default-requeue-rejected: false
+        retry:
+          enabled: true
+          max-attempts: ${RABBITMQ_LISTENER_RETRY_MAX_ATTEMPTS:3}
+          initial-interval: ${RABBITMQ_LISTENER_RETRY_INITIAL_INTERVAL:1s}
+          multiplier: ${RABBITMQ_LISTENER_RETRY_MULTIPLIER:2.0}
+          max-interval: ${RABBITMQ_LISTENER_RETRY_MAX_INTERVAL:10s}
 server:
   error:
     whitelabel:
@@ -81,11 +87,24 @@ app:
   simulation:
     enabled: ${APP_SIMULATION_ENABLED:true}
     seed-on-startup: ${APP_SIMULATION_SEED_ON_STARTUP:true}
-    scheduler-enabled: ${APP_SIMULATION_SCHEDULER_ENABLED:true}
-    operational-seed-enabled: ${APP_SIMULATION_OPERATIONAL_SEED_ENABLED:true}
+    scheduler-enabled: ${APP_SIMULATION_SCHEDULER_ENABLED:false}
+    operational-seed-enabled: ${APP_SIMULATION_OPERATIONAL_SEED_ENABLED:false}
     default-profile-name: ${APP_SIMULATION_DEFAULT_PROFILE:mzhd-main}
     initial-event-count: ${APP_SIMULATION_INITIAL_EVENTS:4}
     route-count: ${APP_SIMULATION_ROUTE_COUNT:13}
+  streaming:
+    broker-relay:
+      enabled: ${APP_STREAMING_BROKER_RELAY_ENABLED:false}
+      host: ${APP_STREAMING_BROKER_RELAY_HOST:localhost}
+      port: ${APP_STREAMING_BROKER_RELAY_PORT:61613}
+      client-login: ${APP_STREAMING_BROKER_RELAY_CLIENT_LOGIN:${RABBITMQ_USERNAME:dashboard}}
+      client-passcode: ${APP_STREAMING_BROKER_RELAY_CLIENT_PASSCODE:${RABBITMQ_PASSWORD:dashboard}}
+      system-login: ${APP_STREAMING_BROKER_RELAY_SYSTEM_LOGIN:${RABBITMQ_USERNAME:dashboard}}
+      system-passcode: ${APP_STREAMING_BROKER_RELAY_SYSTEM_PASSCODE:${RABBITMQ_PASSWORD:dashboard}}
+    outbox:
+      enabled: ${APP_STREAMING_OUTBOX_ENABLED:true}
+      batch-size: ${APP_STREAMING_OUTBOX_BATCH_SIZE:100}
+      dispatch-fixed-delay-ms: ${APP_STREAMING_OUTBOX_DISPATCH_FIXED_DELAY_MS:1000}
 
 generator:
   messaging:

@@ -1,23 +1,23 @@
 package ru.mzd.geoanalytics.dashboard.events.infrastructure;
 
 import org.springframework.stereotype.Component;
-import ru.mzd.geoanalytics.dashboard.dashboard.api.DashboardApiModels;
 import ru.mzd.geoanalytics.dashboard.events.application.model.OperationalEventProjection;
 import ru.mzd.geoanalytics.dashboard.events.application.port.OperationalEventStreamingPort;
-import ru.mzd.geoanalytics.dashboard.streaming.DashboardStreamingGateway;
+import ru.mzd.geoanalytics.dashboard.streaming.StreamingMessages;
+import ru.mzd.geoanalytics.dashboard.streaming.StreamingOutbox;
 
 @Component
 public class OperationalEventStreamingAdapter implements OperationalEventStreamingPort {
 
-    private final DashboardStreamingGateway dashboardStreamingGateway;
+    private final StreamingOutbox streamingOutbox;
 
-    public OperationalEventStreamingAdapter(DashboardStreamingGateway dashboardStreamingGateway) {
-        this.dashboardStreamingGateway = dashboardStreamingGateway;
+    public OperationalEventStreamingAdapter(StreamingOutbox streamingOutbox) {
+        this.streamingOutbox = streamingOutbox;
     }
 
     @Override
     public void publishEventUpsert(OperationalEventProjection eventProjection) {
-        dashboardStreamingGateway.publishEventUpsert(new DashboardApiModels.OperationalEventResponse(
+        StreamingMessages.EventPayload payload = new StreamingMessages.EventPayload(
             eventProjection.id(),
             eventProjection.title(),
             eventProjection.status().name(),
@@ -28,6 +28,7 @@ public class OperationalEventStreamingAdapter implements OperationalEventStreami
             eventProjection.affectedSection(),
             eventProjection.startedAt(),
             eventProjection.updatedAt()
-        ));
+        );
+        streamingOutbox.enqueueEventUpsert(payload);
     }
 }

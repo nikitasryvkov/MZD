@@ -25,7 +25,21 @@ public class WebSocketConfiguration implements WebSocketMessageBrokerConfigurer 
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/topic");
+        ApplicationProperties.BrokerRelay brokerRelay =
+            applicationProperties.getStreaming().getBrokerRelay();
+
+        if (brokerRelay.isEnabled()) {
+            registry.enableStompBrokerRelay("/topic")
+                .setRelayHost(brokerRelay.getHost())
+                .setRelayPort(brokerRelay.getPort())
+                .setClientLogin(brokerRelay.getClientLogin())
+                .setClientPasscode(brokerRelay.getClientPasscode())
+                .setSystemLogin(brokerRelay.getSystemLogin())
+                .setSystemPasscode(brokerRelay.getSystemPasscode());
+        } else {
+            registry.enableSimpleBroker("/topic");
+        }
+
         registry.setApplicationDestinationPrefixes("/app");
     }
 

@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useState } from 'react'
+import { useEffect, useEffectEvent, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { Client } from '@stomp/stompjs'
 import { getAuthToken, getWebSocketUrl } from '@/shared/api/http'
@@ -8,6 +8,7 @@ import {
   type DashboardQueryRequest,
   type EventPreview,
   type EventUpdateMessage,
+  type GeoJsonFeatureCollection,
   type OperationalEvent,
   type Train,
   type TrainUpdateMessage,
@@ -33,6 +34,10 @@ interface UseDashboardRealtimeOptions {
   request: DashboardQueryRequest
   selectedEventId?: string
 }
+
+const SNAPSHOT_RESYNC_DEBOUNCE_MS = 750
+const MAX_LAYER_ROWS = 1000
+const MAX_EVENTS_PREVIEW_ROWS = 100
 
 function severityRank(value: string) {
   switch (value.toUpperCase()) {
@@ -61,6 +66,30 @@ function sortTrains(items: Train[]) {
   return [...items].sort((left, right) =>
     left.trainNumber.localeCompare(right.trainNumber, 'ru'),
   )
+}
+
+function sortOperationalEvents(items: OperationalEvent[]) {
+  return [...items].sort((left, right) => {
+    const updatedAtDifference =
+      toComparableInstant(right.updatedAt) - toComparableInstant(left.updatedAt)
+    if (updatedAtDifference !== 0) {
+      return updatedAtDifference
+    }
+
+    return left.id.localeCompare(right.id)
+  })
+}
+
+function limitGeoJsonFeatures(
+  collection: GeoJsonFeatureCollection,
+  allowedIds: string[],
+): GeoJsonFeatureCollection {
+  const allowedIdSet = new Set(allowedIds)
+
+  return {
+    ...collection,
+    features: collection.features.filter((feature) => allowedIdSet.has(feature.id)),
+  }
 }
 
 function toComparableInstant(value?: string) {
@@ -135,20 +164,25 @@ function applyTrainDelta(
     !shouldKeepTrain
       ? currentSnapshot.mapData.trains.filter((train) => train.id !== message.train.id)
       : sortTrains(upsertEntity<Train>(currentSnapshot.mapData.trains, message.train))
+  const limitedTrains = nextTrains.slice(0, MAX_LAYER_ROWS)
   const geoJsonSources = resolveDashboardGeoJsonSources(currentSnapshot.mapData)
   const nextTrainFeature = message.feature ?? toTrainGeoJsonFeature(message.train)
+  const nextTrainGeoJsonSource = !shouldKeepTrain
+    ? removeGeoJsonFeature(geoJsonSources.trains, message.train.id)
+    : upsertGeoJsonFeature(geoJsonSources.trains, nextTrainFeature)
   const nextGeoJsonSources = {
     ...geoJsonSources,
-    trains: !shouldKeepTrain
-      ? removeGeoJsonFeature(geoJsonSources.trains, message.train.id)
-      : upsertGeoJsonFeature(geoJsonSources.trains, nextTrainFeature),
+    trains: limitGeoJsonFeatures(
+      nextTrainGeoJsonSource,
+      limitedTrains.map((train) => train.id),
+    ),
   }
 
   return {
     ...currentSnapshot,
     mapData: {
       ...currentSnapshot.mapData,
-      trains: nextTrains,
+      trains: limitedTrains,
       geoJsonSources: nextGeoJsonSources,
     },
   }
@@ -205,24 +239,37 @@ function applyEventDelta(
   const shouldKeepEventOnMap = request.layerFilter.showEvents && shouldKeepEvent
   const nextOperationalEvents =
     message.operation === 'REMOVE' || !shouldKeepEventOnMap
-      ? currentSnapshot.mapData.operationalEvents.filter((event) => event.id !== message.event.id)
-      : upsertEntity<OperationalEvent>(
-          currentSnapshot.mapData.operationalEvents,
-          message.event,
+      ? sortOperationalEvents(
+          currentSnapshot.mapData.operationalEvents.filter(
+            (event) => event.id !== message.event.id,
+          ),
         )
+      : sortOperationalEvents(
+          upsertEntity<OperationalEvent>(
+            currentSnapshot.mapData.operationalEvents,
+            message.event,
+          ),
+        )
+  const limitedOperationalEvents = nextOperationalEvents.slice(0, MAX_LAYER_ROWS)
   const geoJsonSources = resolveDashboardGeoJsonSources(currentSnapshot.mapData)
   const nextEventFeature = message.feature ?? toOperationalEventGeoJsonFeature(message.event)
+  const nextEventGeoJsonSource =
+    message.operation === 'REMOVE' || !shouldKeepEventOnMap
+      ? removeGeoJsonFeature(geoJsonSources.operationalEvents, message.event.id)
+      : upsertGeoJsonFeature(geoJsonSources.operationalEvents, nextEventFeature)
   const nextGeoJsonSources = {
     ...geoJsonSources,
-    operationalEvents:
-      message.operation === 'REMOVE' || !shouldKeepEventOnMap
-        ? removeGeoJsonFeature(geoJsonSources.operationalEvents, message.event.id)
-        : upsertGeoJsonFeature(geoJsonSources.operationalEvents, nextEventFeature),
+    operationalEvents: limitGeoJsonFeatures(
+      nextEventGeoJsonSource,
+      limitedOperationalEvents.map((event) => event.id),
+    ),
   }
 
   const nextPreview =
     message.operation === 'REMOVE' || !shouldKeepEvent
-      ? currentSnapshot.eventsPreview.filter((event) => event.id !== message.event.id)
+      ? currentSnapshot.eventsPreview
+          .filter((event) => event.id !== message.event.id)
+          .slice(0, MAX_EVENTS_PREVIEW_ROWS)
       : sortEventPreview(
           upsertEntity<EventPreview>(
             currentSnapshot.eventsPreview,
@@ -231,16 +278,24 @@ function applyEventDelta(
               currentSnapshot.eventsPreview.find((event) => event.id === message.event.id),
             ),
           ),
-        )
+        ).slice(0, MAX_EVENTS_PREVIEW_ROWS)
 
   return {
     ...currentSnapshot,
     mapData: {
       ...currentSnapshot.mapData,
-      operationalEvents: nextOperationalEvents,
+      operationalEvents: limitedOperationalEvents,
       geoJsonSources: nextGeoJsonSources,
     },
     eventsPreview: nextPreview,
+  }
+}
+
+function parseRealtimeMessage<T>(body: string) {
+  try {
+    return JSON.parse(body) as T
+  } catch {
+    return undefined
   }
 }
 
@@ -250,10 +305,11 @@ export function useDashboardRealtime({
   selectedEventId,
 }: UseDashboardRealtimeOptions) {
   const queryClient = useQueryClient()
+  const resyncTimerRef = useRef<number | undefined>(undefined)
   const [connectionState, setConnectionState] =
     useState<StreamingConnectionState>('idle')
 
-  const resyncSnapshot = useEffectEvent(() => {
+  const resyncSnapshotNow = useEffectEvent(() => {
     queryClient.invalidateQueries({ queryKey: dashboardKeys.snapshotRoot })
 
     if (selectedEventId) {
@@ -263,9 +319,20 @@ export function useDashboardRealtime({
     }
   })
 
+  const scheduleSnapshotResync = useEffectEvent(() => {
+    if (resyncTimerRef.current !== undefined) {
+      return
+    }
+
+    resyncTimerRef.current = window.setTimeout(() => {
+      resyncTimerRef.current = undefined
+      resyncSnapshotNow()
+    }, SNAPSHOT_RESYNC_DEBOUNCE_MS)
+  })
+
   const handleTrainMessage = useEffectEvent((message: TrainUpdateMessage) => {
     if (hasTrainRealtimeResyncRequirement(request)) {
-      resyncSnapshot()
+      scheduleSnapshotResync()
       return
     }
 
@@ -278,7 +345,7 @@ export function useDashboardRealtime({
 
   const handleEventMessage = useEffectEvent((message: EventUpdateMessage) => {
     if (hasEventRealtimeResyncRequirement(request)) {
-      resyncSnapshot()
+      scheduleSnapshotResync()
       return
     }
 
@@ -294,6 +361,14 @@ export function useDashboardRealtime({
       })
     }
   })
+
+  useEffect(() => {
+    return () => {
+      if (resyncTimerRef.current !== undefined) {
+        window.clearTimeout(resyncTimerRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!enabled) {
@@ -333,12 +408,13 @@ export function useDashboardRealtime({
 
       setConnectionState(hasConnectedOnce ? 'reconnecting' : 'connecting')
 
+      const accessToken = getAuthToken()
       client = new Client({
         brokerURL: getWebSocketUrl(),
         reconnectDelay: 0,
-        connectHeaders: getAuthToken()
+        connectHeaders: accessToken
           ? {
-              Authorization: `Bearer ${getAuthToken()}`,
+              Authorization: `Bearer ${accessToken}`,
             }
           : {},
       })
@@ -351,27 +427,47 @@ export function useDashboardRealtime({
 
         if (hasConnectedOnce || pendingResync) {
           pendingResync = false
-          resyncSnapshot()
+          resyncSnapshotNow()
         }
 
         hasConnectedOnce = true
 
-        client?.subscribe('/topic/v1/trains', (frame) => {
-          const message = JSON.parse(frame.body) as TrainUpdateMessage
+        client?.subscribe('/topic/v1.trains', (frame) => {
+          const message = parseRealtimeMessage<TrainUpdateMessage>(frame.body)
+          if (!message) {
+            pendingResync = true
+            scheduleSnapshotResync()
+            return
+          }
+
+          if (message.sequence <= trainSequence) {
+            return
+          }
+
           if (trainSequence !== 0 && message.sequence !== trainSequence + 1) {
             pendingResync = true
-            resyncSnapshot()
+            scheduleSnapshotResync()
           }
 
           trainSequence = message.sequence
           handleTrainMessage(message)
         })
 
-        client?.subscribe('/topic/v1/events', (frame) => {
-          const message = JSON.parse(frame.body) as EventUpdateMessage
+        client?.subscribe('/topic/v1.events', (frame) => {
+          const message = parseRealtimeMessage<EventUpdateMessage>(frame.body)
+          if (!message) {
+            pendingResync = true
+            scheduleSnapshotResync()
+            return
+          }
+
+          if (message.sequence <= eventSequence) {
+            return
+          }
+
           if (eventSequence !== 0 && message.sequence !== eventSequence + 1) {
             pendingResync = true
-            resyncSnapshot()
+            scheduleSnapshotResync()
           }
 
           eventSequence = message.sequence

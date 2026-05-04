@@ -1,8 +1,9 @@
 package ru.mzd.geoanalytics.dashboard.streaming;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
-import ru.mzd.geoanalytics.dashboard.dashboard.api.DashboardApiModels;
 
 public final class StreamingMessages {
 
@@ -19,8 +20,8 @@ public final class StreamingMessages {
         long sequence,
         Instant generatedAt,
         String operation,
-        DashboardApiModels.TrainResponse train,
-        DashboardApiModels.GeoJsonFeatureResponse feature
+        TrainPayload train,
+        GeoJsonFeature feature
     ) {
     }
 
@@ -29,8 +30,44 @@ public final class StreamingMessages {
         long sequence,
         Instant generatedAt,
         String operation,
-        DashboardApiModels.OperationalEventResponse event,
-        DashboardApiModels.GeoJsonFeatureResponse feature
+        EventPayload event,
+        GeoJsonFeature feature
+    ) {
+    }
+
+    public record TrainPayload(
+        UUID id,
+        String trainNumber,
+        double latitude,
+        double longitude,
+        String status,
+        UUID currentStationId,
+        UUID nextStationId,
+        Double progressPercent,
+        Double speedKmh,
+        Instant lastUpdated
+    ) {
+    }
+
+    public record EventPayload(
+        UUID id,
+        String title,
+        String status,
+        String severity,
+        double latitude,
+        double longitude,
+        UUID affectedObjectId,
+        String affectedSection,
+        Instant startedAt,
+        Instant updatedAt
+    ) {
+    }
+
+    public record GeoJsonFeature(
+        String type,
+        String id,
+        JsonNode geometry,
+        Map<String, Object> properties
     ) {
     }
 }

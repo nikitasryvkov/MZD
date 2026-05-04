@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
-import ru.mzd.geoanalytics.dashboard.dashboard.api.DashboardApiModels;
 import ru.mzd.geoanalytics.dashboard.dashboard.application.model.DashboardViewModels;
 import ru.mzd.geoanalytics.dashboard.dashboard.application.port.DashboardGeoJsonPort;
 
@@ -62,46 +61,6 @@ public class MapLibreGeoJsonAssembler implements DashboardGeoJsonPort {
         DashboardViewModels.OperationalEventView event
     ) {
         return new DashboardViewModels.GeoJsonFeatureView(
-            "Feature",
-            event.id().toString(),
-            pointGeometry(event.longitude(), event.latitude()),
-            compactProperties(
-                "id", event.id().toString(),
-                "kind", "event",
-                "title", event.title(),
-                "status", event.status(),
-                "severity", event.severity(),
-                "affectedObjectId", stringify(event.affectedObjectId()),
-                "affectedSection", event.affectedSection(),
-                "startedAt", stringify(event.startedAt()),
-                "updatedAt", stringify(event.updatedAt())
-            )
-        );
-    }
-
-    public DashboardApiModels.GeoJsonFeatureResponse toTrainFeature(DashboardApiModels.TrainResponse train) {
-        return new DashboardApiModels.GeoJsonFeatureResponse(
-            "Feature",
-            train.id().toString(),
-            pointGeometry(train.longitude(), train.latitude()),
-            compactProperties(
-                "id", train.id().toString(),
-                "kind", "train",
-                "trainNumber", train.trainNumber(),
-                "status", train.status(),
-                "currentStationId", stringify(train.currentStationId()),
-                "nextStationId", stringify(train.nextStationId()),
-                "progressPercent", train.progressPercent(),
-                "speedKmh", train.speedKmh(),
-                "lastUpdated", stringify(train.lastUpdated())
-            )
-        );
-    }
-
-    public DashboardApiModels.GeoJsonFeatureResponse toOperationalEventFeature(
-        DashboardApiModels.OperationalEventResponse event
-    ) {
-        return new DashboardApiModels.GeoJsonFeatureResponse(
             "Feature",
             event.id().toString(),
             pointGeometry(event.longitude(), event.latitude()),

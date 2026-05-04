@@ -18,6 +18,7 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
 
     private static final String REQUEST_ID_HEADER = "X-Request-Id";
     private static final String TRACE_ID_HEADER = "X-Trace-Id";
+    private static final int MAX_TRACE_ID_LENGTH = 64;
 
     @Override
     protected void doFilterInternal(
@@ -26,7 +27,7 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
         FilterChain filterChain
     ) throws ServletException, IOException {
         String requestId = resolveOrGenerate(request.getHeader(REQUEST_ID_HEADER));
-        String traceId = request.getHeader(TRACE_ID_HEADER);
+        String traceId = normalizeTraceId(request.getHeader(TRACE_ID_HEADER));
 
         request.setAttribute(RequestContext.REQUEST_ID_ATTRIBUTE, requestId);
         if (traceId != null && !traceId.isBlank()) {
@@ -58,5 +59,16 @@ public class RequestCorrelationFilter extends OncePerRequestFilter {
         } catch (IllegalArgumentException ignored) {
             return UUID.randomUUID().toString();
         }
+    }
+
+    private String normalizeTraceId(String incomingValue) {
+        if (incomingValue == null || incomingValue.isBlank()) {
+            return null;
+        }
+
+        String normalized = incomingValue.trim().replaceAll("[^A-Za-z0-9._:-]", "-");
+        return normalized.length() <= MAX_TRACE_ID_LENGTH
+            ? normalized
+            : normalized.substring(0, MAX_TRACE_ID_LENGTH);
     }
 }

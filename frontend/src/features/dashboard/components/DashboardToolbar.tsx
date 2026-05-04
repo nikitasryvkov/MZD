@@ -23,6 +23,7 @@ interface DashboardToolbarProps {
   onRefresh: () => void
   onReset: () => void
   onHide?: () => void
+  canRequestPersonnel: boolean
   onDraftFieldChange: (
     field:
       | 'timeRangeFrom'
@@ -51,6 +52,7 @@ export function DashboardToolbar({
   onRefresh,
   onReset,
   onHide,
+  canRequestPersonnel,
   onDraftFieldChange,
   onToggleLayer,
   onToggleStatus,
@@ -119,8 +121,9 @@ export function DashboardToolbar({
             </button>
             <button
               className={styles.pill}
-              data-active={draftFilters.includePersonnel}
+              data-active={draftFilters.includePersonnel && canRequestPersonnel}
               type="button"
+              disabled={!canRequestPersonnel}
               onClick={() =>
                 onDraftFieldChange(
                   'includePersonnel',
@@ -135,6 +138,10 @@ export function DashboardToolbar({
           {inlineErrors.includePersonnel ? (
             <small className={styles.analyticsError}>
               {inlineErrors.includePersonnel}
+            </small>
+          ) : !canRequestPersonnel ? (
+            <small className={styles.analyticsError}>
+              Нет прав для запроса данных по персоналу.
             </small>
           ) : null}
         </section>

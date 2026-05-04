@@ -1,22 +1,56 @@
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from '@/app/layout/AppShell'
-import { AnalyticsPage } from '@/pages/analytics/AnalyticsPage'
-import { GeoAnalyticsDashboardPage } from '@/pages/dashboard/GeoAnalyticsDashboardPage'
-import { EventsPage } from '@/pages/events/EventsPage'
-import { NotFoundPage } from '@/pages/not-found/NotFoundPage'
-import { AboutPage } from '@/pages/about/AboutPage'
+
+const AnalyticsPage = lazy(() =>
+  import('@/pages/analytics/AnalyticsPage').then((module) => ({
+    default: module.AnalyticsPage,
+  })),
+)
+const GeoAnalyticsDashboardPage = lazy(() =>
+  import('@/pages/dashboard/GeoAnalyticsDashboardPage').then((module) => ({
+    default: module.GeoAnalyticsDashboardPage,
+  })),
+)
+const EventsPage = lazy(() =>
+  import('@/pages/events/EventsPage').then((module) => ({
+    default: module.EventsPage,
+  })),
+)
+const NotFoundPage = lazy(() =>
+  import('@/pages/not-found/NotFoundPage').then((module) => ({
+    default: module.NotFoundPage,
+  })),
+)
+const AboutPage = lazy(() =>
+  import('@/pages/about/AboutPage').then((module) => ({
+    default: module.AboutPage,
+  })),
+)
+
+function RouteFallback() {
+  return (
+    <div role="status" aria-live="polite">
+      Загрузка...
+    </div>
+  )
+}
+
+function lazyRoute(element: ReactNode) {
+  return <Suspense fallback={<RouteFallback />}>{element}</Suspense>
+}
 
 export function AppRouter() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route path="/" element={<GeoAnalyticsDashboardPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/about" element={<AboutPage />} />
+        <Route path="/" element={lazyRoute(<GeoAnalyticsDashboardPage />)} />
+        <Route path="/events" element={lazyRoute(<EventsPage />)} />
+        <Route path="/analytics" element={lazyRoute(<AnalyticsPage />)} />
+        <Route path="/about" element={lazyRoute(<AboutPage />)} />
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
       </Route>
-      <Route path="*" element={<NotFoundPage />} />
+      <Route path="*" element={lazyRoute(<NotFoundPage />)} />
     </Routes>
   )
 }

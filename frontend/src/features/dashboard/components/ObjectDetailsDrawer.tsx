@@ -9,7 +9,7 @@ import {
   Warehouse,
   X,
 } from 'lucide-react'
-import { ApiError } from '@/shared/api/http'
+import { ApiError, formatApiErrorDescription } from '@/shared/api/http'
 import {
   formatDateTime,
   formatDistanceKm,
@@ -99,7 +99,7 @@ function EventStatusForm({
       }
 
       if (error.status === 409) {
-        setConflictMessage(error.payload?.message ?? error.message)
+        setConflictMessage(formatApiErrorDescription(error))
         setFormErrors({})
         await queryClient.invalidateQueries({
           queryKey: dashboardKeys.event(eventId),
@@ -113,7 +113,7 @@ function EventStatusForm({
           error.status === 0
             ? 'Соединение с сервером недоступно'
             : `Ошибка обновления события (${error.status})`,
-        description: error.message,
+        description: formatApiErrorDescription(error),
       })
     },
   })
@@ -275,7 +275,7 @@ export function ObjectDetailsDrawer({
         eventDetailsQuery.error.status === 0
           ? 'Детали события недоступны'
           : `Не удалось получить данные по событию (${eventDetailsQuery.error.status})`,
-      description: eventDetailsQuery.error.message,
+      description: formatApiErrorDescription(eventDetailsQuery.error),
     })
   }, [eventDetailsQuery.error, eventDetailsQuery.errorUpdatedAt, pushToast])
 

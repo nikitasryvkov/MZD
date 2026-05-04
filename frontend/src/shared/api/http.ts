@@ -29,6 +29,11 @@ export class ApiError extends Error {
   }
 }
 
+export function formatApiErrorDescription(error: ApiError) {
+  const requestId = error.payload?.requestId
+  return requestId ? `${error.message}\nRequest ID: ${requestId}` : error.message
+}
+
 function trimTrailingSlash(value: string) {
   return value.endsWith('/') ? value.slice(0, -1) : value
 }
@@ -78,13 +83,30 @@ export function getAuthToken() {
   return getCurrentAccessToken()
 }
 
-async function parseResponsePayload(response: Response) {
+async function parseJsonResponse<T>(response: Response) {
   const contentType = response.headers.get('content-type') ?? ''
   if (!contentType.includes('application/json')) {
     return undefined
   }
 
-  return (await response.json()) as ApiErrorPayload
+  const body = await response.text()
+  if (!body.trim()) {
+    return undefined
+  }
+
+  try {
+    return JSON.parse(body) as T
+  } catch {
+    throw new ApiError(
+      response.status || 0,
+      undefined,
+      'Сервер вернул некорректный JSON-ответ.',
+    )
+  }
+}
+
+async function parseResponsePayload(response: Response) {
+  return parseJsonResponse<ApiErrorPayload>(response)
 }
 
 export async function apiRequest<T>(path: string, init: RequestInit = {}) {
@@ -115,7 +137,16 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}) {
       return undefined as T
     }
 
-    return (await response.json()) as T
+    const payload = await parseJsonResponse<T>(response)
+    if (payload === undefined) {
+      throw new ApiError(
+        response.status,
+        undefined,
+        'Сервер вернул пустой ответ.',
+      )
+    }
+
+    return payload
   } catch (error) {
     if (error instanceof ApiError || error instanceof DOMException) {
       throw error

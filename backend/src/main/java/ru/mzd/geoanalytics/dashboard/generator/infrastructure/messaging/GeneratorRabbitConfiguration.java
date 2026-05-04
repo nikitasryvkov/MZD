@@ -28,27 +28,52 @@ public class GeneratorRabbitConfiguration {
 
     @Bean
     public Queue generatorReferenceNetworkQueue(GeneratorRabbitProperties properties) {
-        return QueueBuilder.durable(properties.getQueues().getReferenceNetworkRequest()).build();
+        return durableWorkQueue(properties.getQueues().getReferenceNetworkRequest());
     }
 
     @Bean
     public Queue generatorActiveEventsQueue(GeneratorRabbitProperties properties) {
-        return QueueBuilder.durable(properties.getQueues().getActiveEventsRequest()).build();
+        return durableWorkQueue(properties.getQueues().getActiveEventsRequest());
     }
 
     @Bean
     public Queue generatorTrainsSyncQueue(GeneratorRabbitProperties properties) {
-        return QueueBuilder.durable(properties.getQueues().getTrainsSync()).build();
+        return durableWorkQueue(properties.getQueues().getTrainsSync());
     }
 
     @Bean
     public Queue generatorEventsSyncQueue(GeneratorRabbitProperties properties) {
-        return QueueBuilder.durable(properties.getQueues().getEventsSync()).build();
+        return durableWorkQueue(properties.getQueues().getEventsSync());
     }
 
     @Bean
     public Queue generatorPersonnelSnapshotQueue(GeneratorRabbitProperties properties) {
-        return QueueBuilder.durable(properties.getQueues().getPersonnelSnapshotSync()).build();
+        return durableWorkQueue(properties.getQueues().getPersonnelSnapshotSync());
+    }
+
+    @Bean
+    public Queue generatorReferenceNetworkDeadLetterQueue(GeneratorRabbitProperties properties) {
+        return deadLetterQueue(properties.getQueues().getReferenceNetworkRequest());
+    }
+
+    @Bean
+    public Queue generatorActiveEventsDeadLetterQueue(GeneratorRabbitProperties properties) {
+        return deadLetterQueue(properties.getQueues().getActiveEventsRequest());
+    }
+
+    @Bean
+    public Queue generatorTrainsSyncDeadLetterQueue(GeneratorRabbitProperties properties) {
+        return deadLetterQueue(properties.getQueues().getTrainsSync());
+    }
+
+    @Bean
+    public Queue generatorEventsSyncDeadLetterQueue(GeneratorRabbitProperties properties) {
+        return deadLetterQueue(properties.getQueues().getEventsSync());
+    }
+
+    @Bean
+    public Queue generatorPersonnelSnapshotDeadLetterQueue(GeneratorRabbitProperties properties) {
+        return deadLetterQueue(properties.getQueues().getPersonnelSnapshotSync());
     }
 
     @Bean
@@ -104,5 +129,20 @@ public class GeneratorRabbitConfiguration {
         return BindingBuilder.bind(generatorPersonnelSnapshotQueue)
             .to(generatorExchange)
             .with(properties.getRoutingKeys().getPersonnelSnapshotSync());
+    }
+
+    private Queue durableWorkQueue(String queueName) {
+        return QueueBuilder.durable(queueName)
+            .deadLetterExchange("")
+            .deadLetterRoutingKey(deadLetterQueueName(queueName))
+            .build();
+    }
+
+    private Queue deadLetterQueue(String queueName) {
+        return QueueBuilder.durable(deadLetterQueueName(queueName)).build();
+    }
+
+    private String deadLetterQueueName(String queueName) {
+        return queueName + ".dlq";
     }
 }

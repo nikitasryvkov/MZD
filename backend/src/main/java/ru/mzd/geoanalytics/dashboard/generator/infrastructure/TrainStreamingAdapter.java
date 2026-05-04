@@ -1,23 +1,23 @@
 package ru.mzd.geoanalytics.dashboard.generator.infrastructure;
 
 import org.springframework.stereotype.Component;
-import ru.mzd.geoanalytics.dashboard.dashboard.api.DashboardApiModels;
 import ru.mzd.geoanalytics.dashboard.generator.application.model.TrainProjection;
 import ru.mzd.geoanalytics.dashboard.generator.application.port.TrainStreamingPort;
-import ru.mzd.geoanalytics.dashboard.streaming.DashboardStreamingGateway;
+import ru.mzd.geoanalytics.dashboard.streaming.StreamingMessages;
+import ru.mzd.geoanalytics.dashboard.streaming.StreamingOutbox;
 
 @Component
 public class TrainStreamingAdapter implements TrainStreamingPort {
 
-    private final DashboardStreamingGateway dashboardStreamingGateway;
+    private final StreamingOutbox streamingOutbox;
 
-    public TrainStreamingAdapter(DashboardStreamingGateway dashboardStreamingGateway) {
-        this.dashboardStreamingGateway = dashboardStreamingGateway;
+    public TrainStreamingAdapter(StreamingOutbox streamingOutbox) {
+        this.streamingOutbox = streamingOutbox;
     }
 
     @Override
     public void publishTrainUpsert(TrainProjection trainProjection) {
-        dashboardStreamingGateway.publishTrainUpsert(new DashboardApiModels.TrainResponse(
+        StreamingMessages.TrainPayload payload = new StreamingMessages.TrainPayload(
             trainProjection.id(),
             trainProjection.trainNumber(),
             trainProjection.latitude(),
@@ -28,6 +28,7 @@ public class TrainStreamingAdapter implements TrainStreamingPort {
             trainProjection.progressPercent(),
             trainProjection.speedKmh(),
             trainProjection.lastUpdated()
-        ));
+        );
+        streamingOutbox.enqueueTrainUpsert(payload);
     }
 }

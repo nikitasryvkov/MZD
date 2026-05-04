@@ -1,7 +1,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { PanelLeftOpen, PanelRightOpen } from 'lucide-react'
-import { startTransition, useEffect, useReducer, useState } from 'react'
-import { ApiError } from '@/shared/api/http'
+import { startTransition, useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import { useAuth } from '@/app/auth/authContext'
+import { ApiError, formatApiErrorDescription } from '@/shared/api/http'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { ProgressBar } from '@/shared/ui/ProgressBar'
 import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton'
@@ -10,7 +11,7 @@ import { EventFeedPanel } from '@/features/dashboard/components/EventFeedPanel'
 import { MapViewport } from '@/features/dashboard/components/MapViewport'
 import { ObjectDetailsDrawer } from '@/features/dashboard/components/ObjectDetailsDrawer'
 import { dashboardKeys } from '@/features/dashboard/api/dashboardKeys'
-import { queryDashboardSnapshot } from '@/features/dashboard/api/dashboardApi'
+import { queryDashboardSnapshot, type BoundingBox } from '@/features/dashboard/api/dashboardApi'
 import { useDashboardRealtime } from '@/features/dashboard/hooks/useDashboardRealtime'
 import { createInitialDashboardState, dashboardReducer } from '@/features/dashboard/model/dashboardReducer'
 import {
@@ -20,10 +21,15 @@ import {
 import { useToast } from '@/shared/ui/useToast'
 import styles from './GeoAnalyticsDashboardPage.module.css'
 
+const BOUNDS_SYNC_DEBOUNCE_MS = 300
+
 export function GeoAnalyticsDashboardPage() {
   const { pushToast } = useToast()
+  const { authEnabled, permissions } = useAuth()
   const [filtersVisible, setFiltersVisible] = useState(true)
   const [eventFeedVisible, setEventFeedVisible] = useState(true)
+  const boundsSyncTimerRef = useRef<number | undefined>(undefined)
+  const pendingBoundsRef = useRef<BoundingBox | null>(null)
   const [state, dispatch] = useReducer(
     dashboardReducer,
     undefined,
@@ -39,12 +45,41 @@ export function GeoAnalyticsDashboardPage() {
 
   const selectedEventId =
     state.selectedObject?.kind === 'event' ? state.selectedObject.id : undefined
+  const canRequestPersonnel = !authEnabled || permissions.canViewPersonnel
 
   useDashboardRealtime({
     enabled: Boolean(dashboardQuery.data),
     request: state.appliedFilters,
     selectedEventId,
   })
+
+  const scheduleBoundsSync = useCallback((bbox: BoundingBox) => {
+    pendingBoundsRef.current = bbox
+
+    if (boundsSyncTimerRef.current !== undefined) {
+      return
+    }
+
+    boundsSyncTimerRef.current = window.setTimeout(() => {
+      const nextBbox = pendingBoundsRef.current
+      pendingBoundsRef.current = null
+      boundsSyncTimerRef.current = undefined
+
+      if (nextBbox) {
+        startTransition(() => {
+          dispatch({ type: 'sync-bbox', bbox: nextBbox })
+        })
+      }
+    }, BOUNDS_SYNC_DEBOUNCE_MS)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (boundsSyncTimerRef.current !== undefined) {
+        window.clearTimeout(boundsSyncTimerRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (dashboardQuery.data) {
@@ -87,7 +122,7 @@ export function GeoAnalyticsDashboardPage() {
         dashboardQuery.error.status === 0
           ? 'Сервис временно недоступен'
           : `Не удалось обновить данные (${dashboardQuery.error.status})`,
-      description: dashboardQuery.error.message,
+      description: formatApiErrorDescription(dashboardQuery.error),
     })
   }, [
     dashboardQuery.error,
@@ -98,6 +133,10 @@ export function GeoAnalyticsDashboardPage() {
 
   function handleApplyFilters() {
     const errors = validateDashboardFilters(state.draftFilters)
+
+    if (state.draftFilters.includePersonnel && !canRequestPersonnel) {
+      errors.includePersonnel = 'Нет прав для запроса данных по персоналу.'
+    }
 
     if (Object.keys(errors).length) {
       dispatch({
@@ -127,11 +166,7 @@ export function GeoAnalyticsDashboardPage() {
             onSelectObject={(selection) =>
               dispatch({ type: 'select-object', selection })
             }
-            onBoundsChange={(bbox) => {
-              startTransition(() => {
-                dispatch({ type: 'sync-bbox', bbox })
-              })
-            }}
+            onBoundsChange={scheduleBoundsSync}
           />
 
           {!filtersVisible ? (
@@ -151,6 +186,7 @@ export function GeoAnalyticsDashboardPage() {
                 draftFilters={state.draftFilters}
                 inlineErrors={state.inlineErrors}
                 isRefreshing={dashboardQuery.isFetching}
+                canRequestPersonnel={canRequestPersonnel}
                 onApply={handleApplyFilters}
                 onRefresh={() => {
                   dispatch({ type: 'clear-inline-errors' })

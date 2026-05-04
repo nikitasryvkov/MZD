@@ -11,6 +11,11 @@ export interface AuthContextValue {
   authEnabled: boolean
   status: AuthStatus
   userName?: string
+  authorities: string[]
+  permissions: {
+    canViewPersonnel: boolean
+  }
+  hasAuthority: (requiredAuthorities: string | string[]) => boolean
   signIn: () => Promise<void>
   signOut: () => Promise<void>
 }

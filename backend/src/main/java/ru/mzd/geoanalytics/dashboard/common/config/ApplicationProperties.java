@@ -15,6 +15,7 @@ public class ApplicationProperties {
     private final Security security = new Security();
     private final Cors cors = new Cors();
     private final Simulation simulation = new Simulation();
+    private final Streaming streaming = new Streaming();
 
     public Security getSecurity() {
         return security;
@@ -26,6 +27,10 @@ public class ApplicationProperties {
 
     public Simulation getSimulation() {
         return simulation;
+    }
+
+    public Streaming getStreaming() {
+        return streaming;
     }
 
     public static class Security {
@@ -254,6 +259,123 @@ public class ApplicationProperties {
 
         public void setRouteCount(int routeCount) {
             this.routeCount = routeCount;
+        }
+    }
+
+    public static class Streaming {
+        private final BrokerRelay brokerRelay = new BrokerRelay();
+        private final Outbox outbox = new Outbox();
+
+        public BrokerRelay getBrokerRelay() {
+            return brokerRelay;
+        }
+
+        public Outbox getOutbox() {
+            return outbox;
+        }
+    }
+
+    public static class BrokerRelay {
+        private boolean enabled = false;
+        @NotBlank
+        private String host = "localhost";
+        @Min(1)
+        private int port = 61613;
+        @NotBlank
+        private String clientLogin = "dashboard";
+        @NotBlank
+        private String clientPasscode = "dashboard";
+        @NotBlank
+        private String systemLogin = "dashboard";
+        @NotBlank
+        private String systemPasscode = "dashboard";
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public String getHost() {
+            return host;
+        }
+
+        public void setHost(String host) {
+            this.host = host;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public void setPort(int port) {
+            this.port = port;
+        }
+
+        public String getClientLogin() {
+            return clientLogin;
+        }
+
+        public void setClientLogin(String clientLogin) {
+            this.clientLogin = clientLogin;
+        }
+
+        public String getClientPasscode() {
+            return clientPasscode;
+        }
+
+        public void setClientPasscode(String clientPasscode) {
+            this.clientPasscode = clientPasscode;
+        }
+
+        public String getSystemLogin() {
+            return systemLogin;
+        }
+
+        public void setSystemLogin(String systemLogin) {
+            this.systemLogin = systemLogin;
+        }
+
+        public String getSystemPasscode() {
+            return systemPasscode;
+        }
+
+        public void setSystemPasscode(String systemPasscode) {
+            this.systemPasscode = systemPasscode;
+        }
+    }
+
+    public static class Outbox {
+        private boolean enabled = true;
+        @Min(1)
+        private int batchSize = 100;
+        @Min(1)
+        private long dispatchFixedDelayMs = 1_000;
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public int getBatchSize() {
+            return batchSize;
+        }
+
+        public void setBatchSize(int batchSize) {
+            this.batchSize = batchSize;
+        }
+
+        public long getDispatchFixedDelayMs() {
+            return dispatchFixedDelayMs;
+        }
+
+        public void setDispatchFixedDelayMs(long dispatchFixedDelayMs) {
+            this.dispatchFixedDelayMs = dispatchFixedDelayMs;
         }
     }
 }
