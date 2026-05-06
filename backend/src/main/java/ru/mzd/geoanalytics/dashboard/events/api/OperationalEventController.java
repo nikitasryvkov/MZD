@@ -46,7 +46,7 @@ public class OperationalEventController {
     }
 
     @PatchMapping("/{eventId}/status")
-    @PreAuthorize("@authenticatedUserProvider.hasEventAccess(authentication)")
+    @PreAuthorize("@authenticatedUserProvider.hasAdminAccess(authentication)")
     public OperationalEventApiModels.UpdateOperationalEventStatusResponse updateOperationalEventStatus(
         @PathVariable UUID eventId,
         @Valid @RequestBody OperationalEventApiModels.UpdateOperationalEventStatusRequest request,

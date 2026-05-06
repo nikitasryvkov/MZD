@@ -1,0 +1,17 @@
+.notice {
+  min-width: 0;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid var(--border);
+  background: rgb(var(--rzd-white-rgb) / 0.94);
+  color: var(--ink-strong);
+  box-shadow: var(--shadow-soft);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.notice[data-state='reconnecting'],
+.notice[data-state='disconnected'] {
+  border-color: rgb(var(--rzd-red-rgb) / 0.34);
+  background: rgb(var(--rzd-red-rgb) / 0.1);
+  color: var(--accent-strong);
+}

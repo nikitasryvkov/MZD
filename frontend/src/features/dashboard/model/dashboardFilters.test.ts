@@ -46,4 +46,13 @@ describe('dashboardFilters', () => {
       new Date('2026-05-01T11:00').getTime(),
     )
   })
+
+  it('keeps personnel data opt-in for non-analytics requests', () => {
+    const draftFilters = createInitialDashboardDraftFilters()
+
+    expect(buildDashboardQueryRequest(draftFilters).includePersonnel).toBe(false)
+    expect(
+      buildDashboardQueryRequest(draftFilters, { includePersonnel: true }).includePersonnel,
+    ).toBe(true)
+  })
 })

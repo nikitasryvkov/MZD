@@ -33,6 +33,7 @@ interface UseDashboardRealtimeOptions {
   enabled: boolean
   request: DashboardQueryRequest
   selectedEventId?: string
+  forceSnapshotResync?: boolean
 }
 
 const SNAPSHOT_RESYNC_DEBOUNCE_MS = 750
@@ -303,6 +304,7 @@ export function useDashboardRealtime({
   enabled,
   request,
   selectedEventId,
+  forceSnapshotResync = false,
 }: UseDashboardRealtimeOptions) {
   const queryClient = useQueryClient()
   const resyncTimerRef = useRef<number | undefined>(undefined)
@@ -331,7 +333,7 @@ export function useDashboardRealtime({
   })
 
   const handleTrainMessage = useEffectEvent((message: TrainUpdateMessage) => {
-    if (hasTrainRealtimeResyncRequirement(request)) {
+    if (forceSnapshotResync || hasTrainRealtimeResyncRequirement(request)) {
       scheduleSnapshotResync()
       return
     }
@@ -344,7 +346,7 @@ export function useDashboardRealtime({
   })
 
   const handleEventMessage = useEffectEvent((message: EventUpdateMessage) => {
-    if (hasEventRealtimeResyncRequirement(request)) {
+    if (forceSnapshotResync || hasEventRealtimeResyncRequirement(request)) {
       scheduleSnapshotResync()
       return
     }

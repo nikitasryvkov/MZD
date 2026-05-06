@@ -8,11 +8,11 @@
 .card {
   width: min(100%, 32rem);
   padding: 1.6rem;
-  border-radius: 1.4rem;
-  border: 1px solid rgba(18, 42, 66, 0.12);
+  border-radius: 0;
+  border: 1px solid var(--border);
   background:
-    linear-gradient(180deg, rgba(251, 252, 255, 0.96), rgba(240, 245, 249, 0.96)),
-    white;
+    linear-gradient(180deg, rgb(var(--rzd-white-rgb) / 0.98), rgb(238 241 243 / 0.96)),
+    var(--rzd-white);
   box-shadow: var(--shadow-elevated);
   display: grid;
   gap: 1rem;
@@ -23,27 +23,27 @@
   font-size: 0.78rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: rgba(18, 42, 66, 0.58);
+  color: rgb(var(--rzd-grey-rgb) / 0.68);
 }
 
 .card h1 {
   margin: 0;
   font-size: clamp(1.8rem, 4vw, 2.4rem);
   letter-spacing: -0.05em;
-  color: #102739;
+  color: var(--rzd-grey-dark);
 }
 
 .card p {
   margin: 0;
-  color: rgba(16, 39, 57, 0.8);
+  color: rgb(var(--rzd-grey-rgb) / 0.82);
 }
 
 .error {
   padding: 0.9rem 1rem;
-  border-radius: 1rem;
-  background: rgba(197, 82, 66, 0.1);
-  border: 1px solid rgba(197, 82, 66, 0.22);
-  color: #6b251d;
+  border-radius: 0;
+  background: rgb(var(--rzd-red-rgb) / 0.1);
+  border: 1px solid rgb(var(--rzd-red-rgb) / 0.24);
+  color: var(--rzd-red-dark);
 }
 
 .actions {
@@ -56,18 +56,18 @@
 .secondaryButton {
   appearance: none;
   border: none;
-  border-radius: 999px;
+  border-radius: 0;
   padding: 0.8rem 1.1rem;
   font: inherit;
   cursor: pointer;
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #0e4059, #1a7d9d);
-  color: white;
+  background: linear-gradient(135deg, var(--rzd-red), var(--rzd-red-dark));
+  color: var(--rzd-white);
 }
 
 .secondaryButton {
-  background: rgba(16, 39, 57, 0.08);
-  color: #102739;
+  background: rgb(var(--rzd-grey-rgb) / 0.08);
+  color: var(--rzd-grey-dark);
 }

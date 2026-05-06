@@ -55,7 +55,7 @@ The default `compose.yaml` is already configured this way.
 
 ## Authentication
 
-In local compose mode with `APP_SECURITY_ENABLED=false`, generators connect to RabbitMQ with the compose credentials and no separate service token is required.
+In local compose mode, generators connect to RabbitMQ with the compose credentials and no separate service token is required. The default Keycloak setup protects the public dashboard API, while generator data exchange continues through RabbitMQ.
 
 In secured environments:
 

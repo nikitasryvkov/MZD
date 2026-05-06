@@ -1,4 +1,6 @@
 import {
+  CalendarRange,
+  CircleHelp,
   Filter,
   MapPinned,
   PanelLeftClose,
@@ -7,7 +9,6 @@ import {
   Route,
   RotateCcw,
   TrainFront,
-  Users,
 } from 'lucide-react'
 import type { DraftDashboardFilters } from '@/features/dashboard/model/dashboardFilters'
 import { EVENT_STATUS_OPTIONS } from '@/features/dashboard/model/dashboardFilters'
@@ -23,14 +24,12 @@ interface DashboardToolbarProps {
   onRefresh: () => void
   onReset: () => void
   onHide?: () => void
-  canRequestPersonnel: boolean
   onDraftFieldChange: (
     field:
       | 'timeRangeFrom'
       | 'timeRangeTo'
       | 'departmentCodesInput'
-      | 'includeKpi'
-      | 'includePersonnel',
+      | 'includeKpi',
     value: string | boolean,
   ) => void
   onToggleLayer: (field: keyof DraftDashboardFilters['layerFilter']) => void
@@ -44,6 +43,20 @@ const layerOptions = [
   { field: 'showEvents', label: 'События', icon: Radar },
 ] as const
 
+const departmentOptions = [
+  'MZD-MSK',
+  'MZD-BEL',
+  'MZD-GOR',
+  'MZD-KIE',
+  'MZD-KUR',
+  'MZD-KZN',
+  'MZD-LEN',
+  'MZD-PAV',
+  'MZD-RIG',
+  'MZD-SAV',
+  'MZD-YAR',
+] as const
+
 export function DashboardToolbar({
   draftFilters,
   inlineErrors,
@@ -52,7 +65,6 @@ export function DashboardToolbar({
   onRefresh,
   onReset,
   onHide,
-  canRequestPersonnel,
   onDraftFieldChange,
   onToggleLayer,
   onToggleStatus,
@@ -98,6 +110,7 @@ export function DashboardToolbar({
                   key={option.field}
                   className={styles.pill}
                   data-active={draftFilters.layerFilter[option.field]}
+                  aria-pressed={draftFilters.layerFilter[option.field]}
                   type="button"
                   onClick={() => onToggleLayer(option.field)}
                 >
@@ -112,6 +125,7 @@ export function DashboardToolbar({
             <button
               className={styles.pill}
               data-active={draftFilters.includeKpi}
+              aria-pressed={draftFilters.includeKpi}
               type="button"
               onClick={() =>
                 onDraftFieldChange('includeKpi', !draftFilters.includeKpi)
@@ -119,31 +133,7 @@ export function DashboardToolbar({
             >
               Показатели
             </button>
-            <button
-              className={styles.pill}
-              data-active={draftFilters.includePersonnel && canRequestPersonnel}
-              type="button"
-              disabled={!canRequestPersonnel}
-              onClick={() =>
-                onDraftFieldChange(
-                  'includePersonnel',
-                  !draftFilters.includePersonnel,
-                )
-              }
-            >
-              Персонал
-            </button>
           </div>
-
-          {inlineErrors.includePersonnel ? (
-            <small className={styles.analyticsError}>
-              {inlineErrors.includePersonnel}
-            </small>
-          ) : !canRequestPersonnel ? (
-            <small className={styles.analyticsError}>
-              Нет прав для запроса данных по персоналу.
-            </small>
-          ) : null}
         </section>
 
         <section className={styles.group}>
@@ -157,6 +147,7 @@ export function DashboardToolbar({
                 key={status}
                 className={styles.pill}
                 data-active={draftFilters.eventStatuses.includes(status)}
+                aria-pressed={draftFilters.eventStatuses.includes(status)}
                 type="button"
                 onClick={() => onToggleStatus(status)}
               >
@@ -168,7 +159,7 @@ export function DashboardToolbar({
 
         <section className={[styles.group, styles.periodGroup].join(' ')}>
           <div className={styles.groupHeader}>
-            <Users size={16} />
+            <CalendarRange size={16} />
             <h3>Период и подразделения</h3>
           </div>
           <div className={styles.fieldGrid}>
@@ -201,15 +192,39 @@ export function DashboardToolbar({
             </label>
 
             <label className={[styles.field, styles.fieldWide].join(' ')}>
-              <span>Подразделения</span>
+              <span className={styles.fieldLabel}>
+                Подразделения
+                <span className={styles.helpWrap}>
+                  <button
+                    className={styles.helpButton}
+                    type="button"
+                    aria-label="Список подразделений"
+                  >
+                    <CircleHelp size={15} />
+                  </button>
+                  <span className={styles.tooltip} role="tooltip">
+                    <span className={styles.tooltipList}>
+                      {departmentOptions.map((departmentCode) => (
+                        <span key={departmentCode}>{departmentCode}</span>
+                      ))}
+                    </span>
+                  </span>
+                </span>
+              </span>
               <input
                 type="text"
-                placeholder="DCS-01, DCS-02"
+                list="department-code-options"
+                placeholder="MZD-MSK, MZD-KUR, MZD-KZN"
                 value={draftFilters.departmentCodesInput}
                 onChange={(event) =>
                   onDraftFieldChange('departmentCodesInput', event.target.value)
                 }
               />
+              <datalist id="department-code-options">
+                {departmentOptions.map((departmentCode) => (
+                  <option key={departmentCode} value={departmentCode} />
+                ))}
+              </datalist>
               {inlineErrors.departmentCodesInput ? (
                 <small>{inlineErrors.departmentCodesInput}</small>
               ) : (

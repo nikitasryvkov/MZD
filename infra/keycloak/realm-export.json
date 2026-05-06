@@ -1,0 +1,136 @@
+{
+  "realm": "mzd-dashboard",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Full dashboard administration access"
+      },
+      {
+        "name": "MONITORING_USER",
+        "description": "Read-only dashboard and event access"
+      },
+      {
+        "name": "PERSONNEL_VIEWER",
+        "description": "Read-only personnel analytics access"
+      },
+      {
+        "name": "OBSERVABILITY",
+        "description": "Metrics endpoint access"
+      },
+      {
+        "name": "GENERATOR",
+        "description": "Internal generator endpoint access"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "mzd-dashboard-spa",
+      "name": "MZD Dashboard SPA",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+      ],
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "roles",
+        "email"
+      ],
+      "optionalClientScopes": [
+        "address",
+        "phone",
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*##http://127.0.0.1:5173/*"
+      }
+    },
+    {
+      "clientId": "prometheus",
+      "name": "Prometheus",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "bearerOnly": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "prometheus-secret",
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": [
+        "roles"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dashboard",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "username": "viewer",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dashboard",
+      "lastName": "Viewer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "viewer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "MONITORING_USER",
+        "PERSONNEL_VIEWER"
+      ]
+    },
+    {
+      "username": "service-account-prometheus",
+      "enabled": true,
+      "serviceAccountClientId": "prometheus",
+      "realmRoles": [
+        "OBSERVABILITY"
+      ]
+    }
+  ]
+}

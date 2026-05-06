@@ -10,9 +10,9 @@
   display: grid;
   gap: 1rem;
   padding: 2rem;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(18, 42, 66, 0.14);
-  background: rgba(251, 252, 255, 0.92);
+  border-radius: 0;
+  border: 1px solid var(--border-strong);
+  background: rgb(var(--rzd-white-rgb) / 0.94);
   box-shadow: var(--shadow-elevated);
 }
 

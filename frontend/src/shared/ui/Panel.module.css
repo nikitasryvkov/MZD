@@ -2,11 +2,12 @@
   position: relative;
   display: grid;
   gap: 1rem;
+  min-width: 0;
   padding: 1.15rem;
-  border-radius: 1.4rem;
-  border: 1px solid rgba(18, 42, 66, 0.12);
+  border-radius: 0;
+  border: 1px solid var(--border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(246, 248, 252, 0.94));
+    linear-gradient(180deg, rgb(var(--rzd-white-rgb) / 0.94), rgb(238 241 243 / 0.96));
   box-shadow: var(--shadow-soft);
   overflow: hidden;
 }
@@ -16,32 +17,38 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 0.35rem;
-  border-radius: 999px;
-  background: var(--panel-accent, rgba(18, 42, 66, 0.24));
+  border-radius: 0;
+  background: var(--panel-accent, rgb(var(--rzd-grey-rgb) / 0.24));
 }
 
 .panel[data-accent='cool'] {
-  --panel-accent: linear-gradient(180deg, #1a7d9d, #0e4059);
+  --panel-accent: linear-gradient(180deg, var(--rzd-red), var(--rzd-red-dark));
 }
 
 .panel[data-accent='warm'] {
-  --panel-accent: linear-gradient(180deg, #d18b2f, #b24c2f);
+  --panel-accent: linear-gradient(180deg, var(--rzd-grey), var(--rzd-grey-light));
 }
 
 .panel[data-accent='neutral'] {
-  --panel-accent: linear-gradient(180deg, rgba(18, 42, 66, 0.3), rgba(18, 42, 66, 0.14));
+  --panel-accent: linear-gradient(180deg, rgb(var(--rzd-grey-rgb) / 0.3), rgb(var(--rzd-grey-rgb) / 0.14));
 }
 
 .header {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   justify-content: space-between;
   align-items: start;
 }
 
+.header > div {
+  min-width: min(100%, 16rem);
+}
+
 .header h2 {
   margin: 0;
   font-size: 1.05rem;
+  overflow-wrap: anywhere;
 }
 
 .eyebrow {
@@ -60,6 +67,7 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
 }
@@ -67,4 +75,16 @@
 .content {
   display: grid;
   gap: 0.9rem;
+  min-width: 0;
+}
+
+@media (max-width: 560px) {
+  .header,
+  .actions {
+    width: 100%;
+  }
+
+  .actions > * {
+    flex: 1 1 auto;
+  }
 }

@@ -1,4 +1,4 @@
-import { apiRequest } from '@/shared/api/http'
+import { ApiError, apiRequest } from '@/shared/api/http'
 
 export type EventStatus =
   | 'REGISTERED'
@@ -210,15 +210,55 @@ export interface EventUpdateMessage {
   feature?: GeoJsonFeature
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function hasArrayProperty(value: Record<string, unknown>, property: string) {
+  return Array.isArray(value[property])
+}
+
+function validateDashboardSnapshotPayload(payload: unknown): DashboardQueryResponse {
+  if (!isRecord(payload)) {
+    throw new ApiError(
+      0,
+      undefined,
+      'Сервер вернул snapshot в неожиданном формате.',
+    )
+  }
+
+  const mapData = payload.mapData
+  if (
+    typeof payload.requestId !== 'string' ||
+    typeof payload.generatedAt !== 'string' ||
+    !Array.isArray(payload.eventsPreview) ||
+    !isRecord(mapData) ||
+    !hasArrayProperty(mapData, 'stations') ||
+    !hasArrayProperty(mapData, 'routeSegments') ||
+    !hasArrayProperty(mapData, 'trains') ||
+    !hasArrayProperty(mapData, 'operationalEvents')
+  ) {
+    throw new ApiError(
+      0,
+      undefined,
+      'Сервер вернул snapshot в неожиданном формате.',
+    )
+  }
+
+  return payload as unknown as DashboardQueryResponse
+}
+
 export async function queryDashboardSnapshot(
   request: DashboardQueryRequest,
   signal?: AbortSignal,
 ) {
-  return apiRequest<DashboardQueryResponse>('/api/v1/dashboard/query', {
+  const payload = await apiRequest<unknown>('/api/v1/dashboard/query', {
     method: 'POST',
     body: JSON.stringify(request),
     signal,
   })
+
+  return validateDashboardSnapshotPayload(payload)
 }
 
 export async function getOperationalEventDetails(eventId: string, signal?: AbortSignal) {

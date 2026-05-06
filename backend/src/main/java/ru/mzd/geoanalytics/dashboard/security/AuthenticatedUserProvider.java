@@ -51,6 +51,10 @@ public class AuthenticatedUserProvider {
         return hasAnyAuthority(authentication, applicationProperties.getSecurity().getEventAuthorities());
     }
 
+    public boolean hasAdminAccess(Authentication authentication) {
+        return hasAnyAuthority(authentication, applicationProperties.getSecurity().getAdminAuthorities());
+    }
+
     public boolean hasGeneratorAccess(Authentication authentication) {
         return hasAnyAuthority(authentication, applicationProperties.getSecurity().getGeneratorAuthorities());
     }

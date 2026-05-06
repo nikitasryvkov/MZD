@@ -60,27 +60,34 @@ public class JwtAuthorityExtractor implements Converter<Jwt, AbstractAuthenticat
         Set<String> roles = new LinkedHashSet<>();
 
         Object rolesClaim = jwt.getClaims().get("roles");
-        if (rolesClaim instanceof Collection<?> collection) {
-            collection.stream()
-                .filter(String.class::isInstance)
-                .map(String.class::cast)
-                .map(this::normalizeRole)
-                .forEach(roles::add);
-        }
+        addRoles(rolesClaim, roles);
 
         Object realmAccessClaim = jwt.getClaims().get("realm_access");
         if (realmAccessClaim instanceof Map<?, ?> realmAccess) {
-            Object realmRoles = realmAccess.get("roles");
-            if (realmRoles instanceof Collection<?> collection) {
-                collection.stream()
-                    .filter(String.class::isInstance)
-                    .map(String.class::cast)
-                    .map(this::normalizeRole)
-                    .forEach(roles::add);
+            addRoles(realmAccess.get("roles"), roles);
+        }
+
+        Object resourceAccessClaim = jwt.getClaims().get("resource_access");
+        if (resourceAccessClaim instanceof Map<?, ?> resourceAccess) {
+            for (Object clientAccess : resourceAccess.values()) {
+                if (clientAccess instanceof Map<?, ?> clientAccessMap) {
+                    addRoles(clientAccessMap.get("roles"), roles);
+                }
             }
         }
 
         return roles;
+    }
+
+    private void addRoles(Object rolesClaim, Set<String> roles) {
+        if (rolesClaim instanceof Collection<?> collection) {
+            collection.stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .filter(role -> !role.isBlank())
+                .map(this::normalizeRole)
+                .forEach(roles::add);
+        }
     }
 
     private String normalizeRole(String rawRole) {

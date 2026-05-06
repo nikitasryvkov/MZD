@@ -1,5 +1,7 @@
 import {
+  useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type PropsWithChildren,
@@ -21,7 +23,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const timersRef = useRef<Record<string, number>>({})
 
-  function removeToast(id: string) {
+  const removeToast = useCallback((id: string) => {
     const timer = timersRef.current[id]
     if (timer) {
       window.clearTimeout(timer)
@@ -29,7 +31,7 @@ export function ToastProvider({ children }: PropsWithChildren) {
     }
 
     setToasts((currentToasts) => currentToasts.filter((toast) => toast.id !== id))
-  }
+  }, [])
 
   useEffect(() => {
     const timers = timersRef.current
@@ -41,17 +43,22 @@ export function ToastProvider({ children }: PropsWithChildren) {
     }
   }, [])
 
-  function pushToast({ title, description, tone = 'info' }: ToastInput) {
+  const pushToast = useCallback(({ title, description, tone = 'info' }: ToastInput) => {
     const id = crypto.randomUUID()
     setToasts((currentToasts) => [...currentToasts, { id, title, description, tone }])
 
     timersRef.current[id] = window.setTimeout(() => {
       removeToast(id)
     }, 6000)
-  }
+  }, [removeToast])
+
+  const contextValue = useMemo(
+    () => ({ pushToast, removeToast }),
+    [pushToast, removeToast],
+  )
 
   return (
-    <ToastContext.Provider value={{ pushToast, removeToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <div className={styles.viewport} aria-live="polite" aria-atomic="true">
         {toasts.map((toast) => (

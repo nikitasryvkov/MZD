@@ -28,7 +28,6 @@ type DashboardAction =
         | 'timeRangeTo'
         | 'departmentCodesInput'
         | 'includeKpi'
-        | 'includePersonnel'
       value: string | boolean
     }
   | {

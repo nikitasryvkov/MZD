@@ -22,12 +22,6 @@ const NotFoundPage = lazy(() =>
     default: module.NotFoundPage,
   })),
 )
-const AboutPage = lazy(() =>
-  import('@/pages/about/AboutPage').then((module) => ({
-    default: module.AboutPage,
-  })),
-)
-
 function RouteFallback() {
   return (
     <div role="status" aria-live="polite">
@@ -47,7 +41,6 @@ export function AppRouter() {
         <Route path="/" element={lazyRoute(<GeoAnalyticsDashboardPage />)} />
         <Route path="/events" element={lazyRoute(<EventsPage />)} />
         <Route path="/analytics" element={lazyRoute(<AnalyticsPage />)} />
-        <Route path="/about" element={lazyRoute(<AboutPage />)} />
         <Route path="/dashboard" element={<Navigate to="/" replace />} />
       </Route>
       <Route path="*" element={lazyRoute(<NotFoundPage />)} />

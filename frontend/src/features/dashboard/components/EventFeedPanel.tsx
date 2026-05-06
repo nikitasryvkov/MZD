@@ -1,4 +1,4 @@
-import { PanelRightClose } from 'lucide-react'
+import { PanelLeftClose } from 'lucide-react'
 import type { EventPreview } from '@/features/dashboard/api/dashboardApi'
 import { formatStatusLabel } from '@/shared/lib/format'
 import { EmptyState } from '@/shared/ui/EmptyState'
@@ -29,7 +29,7 @@ export function EventFeedPanel({
       actions={
         onHide ? (
           <button className={styles.hideButton} type="button" onClick={onHide}>
-            <PanelRightClose size={16} />
+            <PanelLeftClose size={16} />
             <span>Скрыть</span>
           </button>
         ) : null

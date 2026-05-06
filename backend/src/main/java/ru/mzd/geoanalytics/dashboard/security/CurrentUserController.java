@@ -33,6 +33,10 @@ public class CurrentUserController {
                 authenticatedUserProvider.hasAnyAuthority(
                     authentication,
                     applicationProperties.getSecurity().getPersonnelAuthorities()
+                ),
+                authenticatedUserProvider.hasAnyAuthority(
+                    authentication,
+                    applicationProperties.getSecurity().getAdminAuthorities()
                 )
             )
         );
@@ -46,7 +50,8 @@ public class CurrentUserController {
     }
 
     public record CurrentUserPermissions(
-        boolean canViewPersonnel
+        boolean canViewPersonnel,
+        boolean canManageEvents
     ) {
     }
 }

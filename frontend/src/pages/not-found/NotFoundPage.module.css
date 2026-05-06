@@ -10,9 +10,9 @@
   display: grid;
   gap: 1rem;
   padding: 2rem;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(18, 42, 66, 0.12);
-  background: rgba(251, 252, 255, 0.92);
+  border-radius: 0;
+  border: 1px solid var(--border);
+  background: rgb(var(--rzd-white-rgb) / 0.94);
   box-shadow: var(--shadow-elevated);
 }
 
@@ -32,9 +32,9 @@
   justify-content: center;
   width: fit-content;
   padding: 0.75rem 1rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #0e4059, #1a7d9d);
-  color: white;
+  border-radius: 0;
+  background: linear-gradient(135deg, var(--rzd-red), var(--rzd-red-dark));
+  color: var(--rzd-white);
   text-decoration: none;
   box-shadow: var(--shadow-soft);
 }

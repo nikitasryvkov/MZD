@@ -6,19 +6,22 @@ import styles from './PersonnelWidget.module.css'
 
 interface PersonnelWidgetProps {
   data: PersonnelSummary | null
+  unavailableDescription?: string
 }
 
-export function PersonnelWidget({ data }: PersonnelWidgetProps) {
+export function PersonnelWidget({ data, unavailableDescription }: PersonnelWidgetProps) {
   if (!data) {
     return (
       <Panel
         title="Персонал"
         eyebrow="Команды"
-        subtitle="Сведения по персоналу недоступны."
+        subtitle={unavailableDescription ?? 'Сведения по персоналу недоступны.'}
       >
         <EmptyState
           title="Нет данных по персоналу"
-          description="Попробуйте изменить фильтры или повторить запрос позже."
+          description={
+            unavailableDescription ?? 'Попробуйте изменить фильтры или повторить запрос позже.'
+          }
         />
       </Panel>
     )

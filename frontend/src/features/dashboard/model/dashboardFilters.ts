@@ -16,7 +16,6 @@ export interface DraftDashboardFilters {
   eventStatuses: EventStatus[]
   departmentCodesInput: string
   includeKpi: boolean
-  includePersonnel: boolean
 }
 
 export const EVENT_STATUS_OPTIONS: EventStatus[] = [
@@ -40,7 +39,6 @@ export function createInitialDashboardDraftFilters(): DraftDashboardFilters {
     eventStatuses: [],
     departmentCodesInput: '',
     includeKpi: true,
-    includePersonnel: false,
   }
 }
 
@@ -57,6 +55,7 @@ export function parseDepartmentCodes(input: string) {
 
 export function buildDashboardQueryRequest(
   draftFilters: DraftDashboardFilters,
+  options: { includePersonnel?: boolean } = {},
 ): DashboardQueryRequest {
   const departmentCodes = parseDepartmentCodes(draftFilters.departmentCodesInput)
   const hasTimeRange = draftFilters.timeRangeFrom && draftFilters.timeRangeTo
@@ -75,12 +74,14 @@ export function buildDashboardQueryRequest(
       : undefined,
     departmentCodes: departmentCodes.length ? departmentCodes : undefined,
     includeKpi: draftFilters.includeKpi,
-    includePersonnel: draftFilters.includePersonnel,
+    includePersonnel: options.includePersonnel ?? false,
   }
 }
 
-export function createInitialDashboardQueryRequest(): DashboardQueryRequest {
-  return buildDashboardQueryRequest(createInitialDashboardDraftFilters())
+export function createInitialDashboardQueryRequest(
+  options: { includePersonnel?: boolean } = {},
+): DashboardQueryRequest {
+  return buildDashboardQueryRequest(createInitialDashboardDraftFilters(), options)
 }
 
 export function validateDashboardFilters(draftFilters: DraftDashboardFilters) {

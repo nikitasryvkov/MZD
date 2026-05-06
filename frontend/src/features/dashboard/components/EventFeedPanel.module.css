@@ -1,7 +1,8 @@
 .panel {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(246, 248, 252, 0.68));
+    linear-gradient(180deg, rgb(var(--rzd-white-rgb) / 0.78), rgb(238 241 243 / 0.72));
   backdrop-filter: blur(14px);
+  min-width: 0;
 }
 
 .panel header {
@@ -15,13 +16,13 @@
   gap: 0.45rem;
   min-height: 2.5rem;
   padding: 0.6rem 0.9rem;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .feed {
   display: grid;
   gap: 0.75rem;
-  max-height: 18rem;
+  max-height: min(42vh, 22rem);
   overflow: auto;
   padding-right: 0.2rem;
 }
@@ -29,29 +30,50 @@
 .eventRow {
   display: grid;
   gap: 0.55rem;
+  min-width: 0;
   text-align: left;
-  border-radius: 1.1rem;
+  border-radius: 0;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.48);
-  border: 1px solid rgba(18, 42, 66, 0.1);
+  background: rgb(var(--rzd-white-rgb) / 0.58);
+  border: 1px solid var(--border);
   box-shadow: none;
   backdrop-filter: blur(8px);
 }
 
 .eventRow[data-selected='true'] {
-  border-color: rgba(26, 125, 157, 0.32);
-  background: rgba(26, 125, 157, 0.12);
+  border-color: rgb(var(--rzd-red-rgb) / 0.34);
+  background: rgb(var(--rzd-red-rgb) / 0.11);
 }
 
 .eventHeader,
 .metaRow {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 0.75rem;
   align-items: start;
 }
 
+.eventHeader strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .metaRow span,
 .eventRow small {
   color: var(--ink-soft);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .feed {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .eventRow {
+    padding: 0.85rem;
+  }
 }

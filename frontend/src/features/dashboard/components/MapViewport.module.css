@@ -11,8 +11,8 @@
   min-height: 100%;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(26, 125, 157, 0.16), transparent 24%),
-    linear-gradient(180deg, rgba(223, 233, 243, 0.6), rgba(245, 240, 231, 0.82));
+    radial-gradient(circle at top left, rgb(var(--rzd-red-rgb) / 0.1), transparent 24%),
+    linear-gradient(180deg, rgb(238 241 243 / 0.66), rgb(var(--rzd-white-rgb) / 0.84));
 }
 
 .map {
@@ -26,8 +26,8 @@
   z-index: 500;
   width: min(100%, 18rem);
   padding: 0.9rem 1rem;
-  border-radius: 1rem;
-  background: rgba(251, 252, 255, 0.94);
+  border-radius: 0;
+  background: rgb(var(--rzd-white-rgb) / 0.96);
   box-shadow: var(--shadow-soft);
 }
 

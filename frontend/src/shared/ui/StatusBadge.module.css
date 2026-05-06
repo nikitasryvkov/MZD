@@ -4,7 +4,7 @@
   justify-content: center;
   min-height: 1.95rem;
   padding: 0.2rem 0.7rem;
-  border-radius: 999px;
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -13,15 +13,15 @@
 }
 
 .badge[data-tone='neutral'] {
-  color: #365063;
-  background: rgba(54, 80, 99, 0.08);
-  border-color: rgba(54, 80, 99, 0.14);
+  color: var(--rzd-grey);
+  background: rgb(var(--rzd-grey-rgb) / 0.08);
+  border-color: rgb(var(--rzd-grey-rgb) / 0.14);
 }
 
 .badge[data-tone='info'] {
-  color: #0e5f7d;
-  background: rgba(14, 95, 125, 0.09);
-  border-color: rgba(14, 95, 125, 0.16);
+  color: var(--rzd-red-dark);
+  background: rgb(var(--rzd-red-rgb) / 0.09);
+  border-color: rgb(var(--rzd-red-rgb) / 0.16);
 }
 
 .badge[data-tone='success'] {
@@ -37,7 +37,7 @@
 }
 
 .badge[data-tone='danger'] {
-  color: #a4372d;
-  background: rgba(164, 55, 45, 0.1);
-  border-color: rgba(164, 55, 45, 0.16);
+  color: var(--rzd-red-dark);
+  background: rgb(var(--rzd-red-rgb) / 0.1);
+  border-color: rgb(var(--rzd-red-rgb) / 0.16);
 }

@@ -20,7 +20,7 @@
   gap: 0.45rem;
   min-height: 2.5rem;
   padding: 0.6rem 0.9rem;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
 .grid {
@@ -33,9 +33,9 @@
   display: grid;
   gap: 0.75rem;
   padding: 0.95rem;
-  border-radius: 1.05rem;
-  background: rgba(255, 255, 255, 0.48);
-  border: 1px solid rgba(18, 42, 66, 0.08);
+  border-radius: 0;
+  background: rgb(var(--rzd-white-rgb) / 0.62);
+  border: 1px solid var(--border);
 }
 
 .periodGroup {
@@ -54,6 +54,57 @@
   font-size: 0.95rem;
 }
 
+.helpWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.helpButton {
+  display: inline-grid;
+  place-items: center;
+  width: 1.45rem;
+  height: 1.45rem;
+  padding: 0;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.helpButton:hover,
+.helpButton:focus-visible {
+  color: var(--accent-strong);
+  border-color: var(--border);
+  background: rgb(var(--rzd-white-rgb) / 0.72);
+}
+
+.tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 20;
+  width: min(24rem, 82vw);
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  background: rgb(var(--rzd-white-rgb) / 0.98);
+  color: var(--ink-strong);
+  box-shadow: var(--shadow-soft);
+  font-size: 0.76rem;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.25rem);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.helpWrap:hover .tooltip,
+.helpButton:focus-visible + .tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .pillGrid,
 .toggleRow {
   display: flex;
@@ -67,15 +118,15 @@
   gap: 0.45rem;
   min-height: 2.4rem;
   padding: 0.5rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(18, 42, 66, 0.12);
-  background: rgba(255, 255, 255, 0.8);
+  border-radius: 0;
+  border: 1px solid var(--border);
+  background: rgb(var(--rzd-white-rgb) / 0.86);
   box-shadow: none;
 }
 
 .pill[data-active='true'] {
-  background: rgba(26, 125, 157, 0.12);
-  border-color: rgba(26, 125, 157, 0.28);
+  background: rgb(var(--rzd-red-rgb) / 0.12);
+  border-color: rgb(var(--rzd-red-rgb) / 0.3);
   color: var(--accent-strong);
 }
 
@@ -99,9 +150,16 @@
   grid-column: 1 / -1;
 }
 
-.field span {
+.field > span {
   font-size: 0.84rem;
   color: var(--ink-soft);
+}
+
+.fieldLabel {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  width: fit-content;
 }
 
 .field small,
@@ -110,10 +168,22 @@
   color: var(--accent-danger);
 }
 
+.tooltipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tooltipList span {
+  display: inline-flex;
+  color: var(--ink-strong);
+  font-weight: 700;
+}
+
 .primaryButton {
-  background: linear-gradient(135deg, #0e4059, #1a7d9d);
-  color: white;
-  border-color: rgba(14, 64, 89, 0.24);
+  background: linear-gradient(135deg, var(--rzd-red), var(--rzd-red-dark));
+  color: var(--rzd-white);
+  border-color: rgb(var(--rzd-red-rgb) / 0.28);
 }
 
 @media (max-width: 900px) {

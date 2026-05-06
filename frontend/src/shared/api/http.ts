@@ -76,6 +76,10 @@ export function getWebSocketUrl() {
     return 'ws://localhost:8080/ws'
   }
 
+  if (window.location.port === '5173') {
+    return `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.hostname}:8080/ws`
+  }
+
   return `${window.location.origin.replace(/^http/i, 'ws')}/ws`
 }
 

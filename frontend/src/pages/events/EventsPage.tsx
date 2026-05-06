@@ -6,6 +6,8 @@ import {
 import { dashboardKeys } from '@/features/dashboard/api/dashboardKeys'
 import { EventFeedPanel } from '@/features/dashboard/components/EventFeedPanel'
 import { ObjectDetailsDrawer } from '@/features/dashboard/components/ObjectDetailsDrawer'
+import { StreamingStatusNotice } from '@/features/dashboard/components/StreamingStatusNotice'
+import { useDashboardRealtime } from '@/features/dashboard/hooks/useDashboardRealtime'
 import { createInitialDashboardQueryRequest } from '@/features/dashboard/model/dashboardFilters'
 import { EmptyState } from '@/shared/ui/EmptyState'
 import { Panel } from '@/shared/ui/Panel'
@@ -18,6 +20,11 @@ export function EventsPage() {
   const dashboardQuery = useQuery({
     queryKey: dashboardKeys.snapshot(defaultRequest),
     queryFn: ({ signal }) => queryDashboardSnapshot(defaultRequest, signal),
+  })
+  const streamingConnectionState = useDashboardRealtime({
+    enabled: Boolean(dashboardQuery.data),
+    request: defaultRequest,
+    selectedEventId,
   })
   const isInitialLoading = dashboardQuery.isLoading && !dashboardQuery.data
   const isInitialError = dashboardQuery.isError && !dashboardQuery.data
@@ -32,6 +39,8 @@ export function EventsPage() {
           чтобы посмотреть подробности и статус.
         </p>
       </section>
+
+      <StreamingStatusNotice state={streamingConnectionState} />
 
       {isInitialLoading ? (
         <section className={styles.empty}>
@@ -61,32 +70,11 @@ export function EventsPage() {
               selectedEventId={selectedEventId}
               onSelectEvent={setSelectedEventId}
             />
-
-            <Panel
-              title="Просмотр событий"
-              eyebrow="Порядок работы"
-              subtitle="Краткая информация по разделу."
-              accent="warm"
-            >
-              <div className={styles.singleColumn}>
-                <div>
-                  <strong>Приоритет</strong>
-                  <p>В первую очередь проверяйте события с высоким уровнем важности.</p>
-                </div>
-                <div>
-                  <strong>Статус</strong>
-                  <p>По метке статуса видно, какие события новые, а какие уже находятся в работе.</p>
-                </div>
-                <div>
-                  <strong>Переход к карте</strong>
-                  <p>Для просмотра участка на схеме откройте раздел «Карта» в верхнем меню.</p>
-                </div>
-              </div>
-            </Panel>
           </div>
 
           {dashboardQuery.isError ? (
             <Panel
+              className={styles.fullWidth}
               title="Данные событий не обновились"
               eyebrow="Внимание"
               accent="warm"

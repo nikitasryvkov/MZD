@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.mzd.geoanalytics.dashboard.common.exception.ConflictException;
 import ru.mzd.geoanalytics.dashboard.common.exception.ResourceNotFoundException;
@@ -177,6 +178,19 @@ public class GlobalExceptionHandler {
             null,
             null
         ));
+    }
+
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    public void handleClientDisconnected(
+        AsyncRequestNotUsableException exception,
+        HttpServletRequest request
+    ) {
+        log.debug(
+            "РљР»РёРµРЅС‚ Р·Р°РєСЂС‹Р» СЃРѕРµРґРёРЅРµРЅРёРµ РґРѕ Р·Р°РІРµСЂС€РµРЅРёСЏ РѕС‚РІРµС‚Р° {} {}.",
+            request.getMethod(),
+            request.getRequestURI(),
+            exception
+        );
     }
 
     @ExceptionHandler(Exception.class)

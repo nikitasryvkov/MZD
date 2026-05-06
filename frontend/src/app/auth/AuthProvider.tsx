@@ -17,6 +17,7 @@ import styles from './AuthProvider.module.css'
 const SKIP_AUTO_SIGN_IN_KEY = 'mzd-dashboard.skip-auto-sign-in'
 const EMPTY_AUTH_PERMISSIONS: CurrentUserResponse['permissions'] = {
   canViewPersonnel: false,
+  canManageEvents: false,
 }
 
 function getUserDisplayName(user?: User) {
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
   )
   const [user, setUser] = useState<User>()
   const [authorities, setAuthorities] = useState<string[]>([])
+  const [permissionsLoaded, setPermissionsLoaded] = useState(!configuration.authEnabled)
   const [permissions, setPermissions] = useState<CurrentUserResponse['permissions']>(
     EMPTY_AUTH_PERMISSIONS,
   )
@@ -127,27 +129,34 @@ export function AuthProvider({ children }: PropsWithChildren) {
     () => (effectiveStatus === 'authenticated' ? permissions : EMPTY_AUTH_PERMISSIONS),
     [effectiveStatus, permissions],
   )
+  const effectivePermissionsLoaded =
+    !configuration.authEnabled ||
+    (effectiveStatus === 'authenticated' && permissionsLoaded)
 
   const clearAuthorities = useCallback(() => {
     authoritiesRequestIdRef.current += 1
     setAuthorities([])
     setPermissions(EMPTY_AUTH_PERMISSIONS)
+    setPermissionsLoaded(false)
   }, [])
 
   const loadCurrentUserAuthorities = useCallback(async () => {
     const requestId = authoritiesRequestIdRef.current + 1
     authoritiesRequestIdRef.current = requestId
+    setPermissionsLoaded(false)
 
     try {
       const currentUser = await getCurrentUser()
       if (authoritiesRequestIdRef.current === requestId) {
         setAuthorities(currentUser.authorities ?? [])
         setPermissions(currentUser.permissions ?? EMPTY_AUTH_PERMISSIONS)
+        setPermissionsLoaded(true)
       }
     } catch {
       if (authoritiesRequestIdRef.current === requestId) {
         setAuthorities([])
         setPermissions(EMPTY_AUTH_PERMISSIONS)
+        setPermissionsLoaded(true)
       }
     }
   }, [])
@@ -376,6 +385,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       status: effectiveStatus,
       userName: getUserDisplayName(effectiveUser),
       authorities: effectiveAuthorities,
+      permissionsLoaded: effectivePermissionsLoaded,
       permissions: effectivePermissions,
       hasAuthority,
       signIn,
@@ -384,6 +394,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     [
       configuration.authEnabled,
       effectiveAuthorities,
+      effectivePermissionsLoaded,
       effectivePermissions,
       effectiveStatus,
       effectiveUser,

@@ -21,7 +21,7 @@ services:
   rabbitmq:
     image: rabbitmq:3.13-management
     command: >
-      sh -c "rabbitmq-plugins enable --offline rabbitmq_stomp && rabbitmq-server"
+      sh -c "rabbitmq-plugins enable --offline rabbitmq_stomp rabbitmq_prometheus && rabbitmq-server"
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-dashboard}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-dashboard}
@@ -36,6 +36,19 @@ services:
       retries: 12
       start_period: 15s
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.0
+    command: start-dev --import-realm
+    environment:
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: ${KEYCLOAK_EXTERNAL_URL:-http://localhost:18080}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    ports:
+      - "127.0.0.1:${KEYCLOAK_HOST_PORT:-18080}:8080"
+    volumes:
+      - ./infra/keycloak/realm-export.json:/opt/keycloak/data/import/mzd-dashboard-realm.json:ro
+
   backend:
     build:
       context: .
@@ -45,6 +58,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     environment:
       DATABASE_URL: jdbc:postgresql://db:5432/mzd_dashboard
       DATABASE_USERNAME: ${DATABASE_USERNAME:-dashboard}
@@ -60,11 +75,11 @@ services:
       APP_STREAMING_BROKER_RELAY_CLIENT_PASSCODE: ${RABBITMQ_PASSWORD:-dashboard}
       APP_STREAMING_BROKER_RELAY_SYSTEM_LOGIN: ${RABBITMQ_USERNAME:-dashboard}
       APP_STREAMING_BROKER_RELAY_SYSTEM_PASSCODE: ${RABBITMQ_PASSWORD:-dashboard}
-      APP_SECURITY_ENABLED: ${APP_SECURITY_ENABLED:-false}
+      APP_SECURITY_ENABLED: ${APP_SECURITY_ENABLED:-true}
       APP_SIMULATION_SCHEDULER_ENABLED: ${APP_SIMULATION_SCHEDULER_ENABLED:-false}
       APP_SIMULATION_OPERATIONAL_SEED_ENABLED: ${APP_SIMULATION_OPERATIONAL_SEED_ENABLED:-false}
-      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-}
-      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-}
+      OIDC_ISSUER_URI: ${OIDC_ISSUER_URI:-http://localhost:18080/realms/mzd-dashboard}
+      OIDC_JWKS_URI: ${OIDC_JWKS_URI:-http://keycloak:8080/realms/mzd-dashboard/protocol/openid-connect/certs}
       OIDC_AUDIENCES: ${OIDC_AUDIENCES:-}
       APP_CORS_ALLOWED_ORIGIN_1: http://localhost:5173
       APP_CORS_ALLOWED_ORIGIN_2: http://127.0.0.1:5173
@@ -85,9 +100,9 @@ services:
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
         VITE_WS_URL: ${VITE_WS_URL:-}
-        VITE_AUTH_ENABLED: ${VITE_AUTH_ENABLED:-false}
-        VITE_OIDC_AUTHORITY: ${VITE_OIDC_AUTHORITY:-}
-        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-}
+        VITE_AUTH_ENABLED: ${VITE_AUTH_ENABLED:-true}
+        VITE_OIDC_AUTHORITY: ${VITE_OIDC_AUTHORITY:-http://localhost:18080/realms/mzd-dashboard}
+        VITE_OIDC_CLIENT_ID: ${VITE_OIDC_CLIENT_ID:-mzd-dashboard-spa}
         VITE_OIDC_SCOPE: ${VITE_OIDC_SCOPE:-openid profile email}
         VITE_OIDC_AUDIENCE: ${VITE_OIDC_AUDIENCE:-}
         VITE_OIDC_REDIRECT_URI: ${VITE_OIDC_REDIRECT_URI:-}
@@ -157,5 +172,42 @@ services:
       PERSONNEL_GENERATOR_SOURCE_SYSTEM: ${PERSONNEL_GENERATOR_SOURCE_SYSTEM:-mzhd-personnel-generator}
       PERSONNEL_GENERATOR_TICK_INTERVAL: ${PERSONNEL_GENERATOR_TICK_INTERVAL:-6h}
 
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    depends_on:
+      backend:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-15d}
+      - --web.enable-lifecycle
+    ports:
+      - "127.0.0.1:${PROMETHEUS_HOST_PORT:-9090}:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:${GRAFANA_HOST_PORT:-3000}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
 volumes:
   postgres_data:
+  prometheus_data:
+  grafana_data:

@@ -6,7 +6,6 @@ const navigationItems = [
   { to: '/', label: 'Карта' },
   { to: '/events', label: 'События' },
   { to: '/analytics', label: 'Аналитика' },
-  { to: '/about', label: 'О сервисе' },
 ] as const
 
 export function AppShell() {

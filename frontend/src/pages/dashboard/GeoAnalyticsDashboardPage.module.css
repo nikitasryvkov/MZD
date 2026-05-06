@@ -7,8 +7,8 @@
   min-height: calc(100vh - 5rem);
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(26, 125, 157, 0.14), transparent 20%),
-    linear-gradient(180deg, rgba(223, 233, 243, 0.25), rgba(245, 240, 231, 0.35));
+    radial-gradient(circle at top left, rgb(var(--rzd-red-rgb) / 0.1), transparent 20%),
+    linear-gradient(180deg, rgb(238 241 243 / 0.34), rgb(var(--rzd-white-rgb) / 0.42));
 }
 
 .mapSurface {
@@ -19,7 +19,7 @@
 .filtersToggle,
 .feedToggle,
 .controlDock,
-.rightRail {
+.eventDock {
   position: absolute;
   z-index: 10;
   display: grid;
@@ -30,6 +30,7 @@
 .controlDock {
   top: 1rem;
   left: 1rem;
+  z-index: 12;
   width: min(44rem, calc(100% - 27rem));
   max-height: calc(100% - 2rem);
   overflow: auto;
@@ -44,36 +45,43 @@
   gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0.7rem 1rem;
-  border-radius: 999px;
-  border: 1px solid rgba(18, 42, 66, 0.12);
-  background: rgba(255, 255, 255, 0.92);
+  border-radius: 0;
+  border: 1px solid var(--border);
+  background: rgb(var(--rzd-white-rgb) / 0.94);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(10px);
 }
 
 .feedToggle {
-  top: 1rem;
-  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
   z-index: 11;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0.7rem 1rem;
-  border-radius: 999px;
-  border: 1px solid rgba(18, 42, 66, 0.12);
-  background: rgba(255, 255, 255, 0.92);
+  border-radius: 0;
+  border: 1px solid var(--border);
+  background: rgb(var(--rzd-white-rgb) / 0.94);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(10px);
 }
 
-.rightRail {
-  top: 1rem;
+.eventDock {
+  left: 1rem;
   bottom: 1rem;
-  right: 1rem;
-  width: min(23rem, calc(100% - 2rem));
-  max-height: calc(100% - 2rem);
+  width: min(28rem, calc(100% - 2rem));
+  max-height: min(30rem, calc(100% - 8rem));
   overflow: auto;
+}
+
+.streamStatus {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 13;
+  width: min(24rem, calc(100% - 2rem));
 }
 
 .loadingShell {
@@ -100,7 +108,8 @@
   .filtersToggle,
   .feedToggle,
   .controlDock,
-  .rightRail {
+  .eventDock,
+  .streamStatus {
     position: relative;
     inset: auto;
     width: 100%;
@@ -109,7 +118,7 @@
 
   .mapSurface {
     min-height: 60vh;
-    border-radius: 1.5rem;
+    border-radius: 0;
     overflow: hidden;
   }
 
@@ -124,7 +133,11 @@
   }
 
   .controlDock,
-  .rightRail {
+  .eventDock {
     overflow: visible;
+  }
+
+  .streamStatus {
+    justify-self: stretch;
   }
 }

@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react'
 import { ApiError, formatApiErrorDescription } from '@/shared/api/http'
+import { useAuth } from '@/app/auth/authContext'
 import {
   formatDateTime,
   formatDistanceKm,
@@ -248,6 +249,8 @@ export function ObjectDetailsDrawer({
   onClose,
 }: ObjectDetailsDrawerProps) {
   const { pushToast } = useToast()
+  const { authEnabled, permissions } = useAuth()
+  const canManageEvents = !authEnabled || permissions.canManageEvents
   const selectedEventId = selection?.kind === 'event' ? selection.id : undefined
   const selectionOpenedAtRef = useRef(0)
 
@@ -391,11 +394,18 @@ export function ObjectDetailsDrawer({
                 <small>Выберите новый статус</small>
               </div>
 
-              <EventStatusForm
-                key={`${event.id}:${event.updatedAt}`}
-                eventId={event.id}
-                allowedTransitions={event.allowedTransitions}
-              />
+              {canManageEvents ? (
+                <EventStatusForm
+                  key={`${event.id}:${event.updatedAt}`}
+                  eventId={event.id}
+                  allowedTransitions={event.allowedTransitions}
+                />
+              ) : (
+                <EmptyState
+                  title="Изменение недоступно"
+                  description="Для изменения статуса требуются права администратора."
+                />
+              )}
             </section>
           </div>
         )

@@ -14,26 +14,35 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --bg-top: #dfe9f3;
-  --bg-bottom: #f5f0e7;
-  --surface: rgba(251, 252, 255, 0.88);
-  --surface-strong: rgba(255, 255, 255, 0.96);
-  --border: rgba(18, 42, 66, 0.12);
-  --border-strong: rgba(18, 42, 66, 0.22);
-  --ink-strong: #122a42;
-  --ink-muted: #4c6475;
-  --ink-soft: #6f8797;
-  --accent: #1a7d9d;
-  --accent-strong: #0e4059;
-  --accent-warm: #d18b2f;
-  --accent-danger: #c55242;
+  --rzd-red-rgb: 205 32 44;
+  --rzd-grey-rgb: 57 74 88;
+  --rzd-white-rgb: 255 255 255;
+  --rzd-red: #cd202c;
+  --rzd-red-dark: #9b1722;
+  --rzd-grey: #394a58;
+  --rzd-grey-dark: #24313b;
+  --rzd-grey-light: #e1e5e9;
+  --rzd-white: #ffffff;
+  --bg-top: #eef1f3;
+  --bg-bottom: #ffffff;
+  --surface: rgb(var(--rzd-white-rgb) / 0.9);
+  --surface-strong: rgb(var(--rzd-white-rgb) / 0.98);
+  --border: rgb(var(--rzd-grey-rgb) / 0.14);
+  --border-strong: rgb(var(--rzd-grey-rgb) / 0.28);
+  --ink-strong: var(--rzd-grey-dark);
+  --ink-muted: var(--rzd-grey);
+  --ink-soft: #717d87;
+  --accent: var(--rzd-red);
+  --accent-strong: var(--rzd-red-dark);
+  --accent-warm: var(--rzd-grey);
+  --accent-danger: var(--rzd-red);
   --accent-success: #2d7c5c;
   --shadow-soft:
-    0 12px 35px rgba(18, 42, 66, 0.08),
-    0 2px 8px rgba(18, 42, 66, 0.04);
+    0 12px 35px rgb(var(--rzd-grey-rgb) / 0.09),
+    0 2px 8px rgb(var(--rzd-grey-rgb) / 0.05);
   --shadow-elevated:
-    0 20px 60px rgba(18, 42, 66, 0.12),
-    0 4px 20px rgba(18, 42, 66, 0.08);
+    0 20px 60px rgb(var(--rzd-grey-rgb) / 0.14),
+    0 4px 20px rgb(var(--rzd-grey-rgb) / 0.08);
 }
 
 * {
@@ -50,8 +59,8 @@ body {
   margin: 0;
   color: var(--ink-strong);
   background:
-    radial-gradient(circle at top left, rgba(26, 125, 157, 0.18), transparent 28%),
-    radial-gradient(circle at top right, rgba(209, 139, 47, 0.16), transparent 22%),
+    radial-gradient(circle at top left, rgb(var(--rzd-red-rgb) / 0.12), transparent 26%),
+    radial-gradient(circle at top right, rgb(var(--rzd-grey-rgb) / 0.13), transparent 24%),
     linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
 }
 
@@ -61,10 +70,10 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+    linear-gradient(rgb(var(--rzd-grey-rgb) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--rzd-grey-rgb) / 0.05) 1px, transparent 1px);
   background-size: 42px 42px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.3), transparent 72%);
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.28), transparent 72%);
 }
 
 a {
@@ -81,7 +90,7 @@ textarea {
 button {
   appearance: none;
   border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--surface-strong);
   color: var(--ink-strong);
   padding: 0.7rem 1rem;
@@ -95,7 +104,7 @@ button {
 
 button:hover {
   transform: translateY(-1px);
-  border-color: rgba(18, 42, 66, 0.28);
+  border-color: var(--border-strong);
 }
 
 button:disabled {
@@ -108,9 +117,9 @@ input,
 select,
 textarea {
   width: 100%;
-  border-radius: 1rem;
+  border-radius: 0;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.82);
+  background: rgb(var(--rzd-white-rgb) / 0.88);
   padding: 0.75rem 0.9rem;
   color: var(--ink-strong);
   transition:
@@ -121,8 +130,8 @@ textarea {
 input:focus,
 select:focus,
 textarea:focus {
-  border-color: rgba(26, 125, 157, 0.46);
-  box-shadow: 0 0 0 4px rgba(26, 125, 157, 0.12);
+  border-color: rgb(var(--rzd-red-rgb) / 0.48);
+  box-shadow: 0 0 0 4px rgb(var(--rzd-red-rgb) / 0.12);
   outline: none;
 }
 
@@ -139,7 +148,7 @@ p {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(26, 125, 157, 0.55);
+  outline: 2px solid rgb(var(--rzd-red-rgb) / 0.55);
   outline-offset: 2px;
 }
 
@@ -157,4 +166,10 @@ p {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.maplibregl-ctrl-group,
+.maplibregl-ctrl-group button,
+.maplibregl-popup-content {
+  border-radius: 0;
 }

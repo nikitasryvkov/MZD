@@ -5,6 +5,7 @@ export interface CurrentUserResponse {
   authorities: string[]
   permissions: {
     canViewPersonnel: boolean
+    canManageEvents: boolean
   }
 }
 
